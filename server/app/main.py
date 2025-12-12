@@ -18,7 +18,14 @@ from app.models.users.professor import Professor
 from app.models.users.program_chair import ProgramChair
 from app.models.users.registrar import Registrar
 from app.models.users.student import Student
-from app.models.users.pending_enrollees import PendingEnrollee
+
+
+# models - pending users
+from app.models.users.pending_users.pending_enrollee import PendingEnrollee
+from app.models.users.pending_users.pending_dean import PendingDean
+from app.models.users.pending_users.pending_program_chair import PendingProgramChair
+from app.models.users.pending_users.pending_professor import PendingProfessor
+from app.models.users.pending_users.pending_registrar import PendingRegistrar
 
 
 # models - Academic Structures
