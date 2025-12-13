@@ -12,3 +12,9 @@ class UserRole(str, Enum):
     PROFESSOR = "Professor"
     STUDENT = "Student"
     
+    
+class UserStatus(str, Enum):
+    APPROVED = "Approved"
+    REJECTED = "Rejected"
+    PENDING = "Pending"
+    

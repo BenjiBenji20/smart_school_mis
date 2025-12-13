@@ -6,7 +6,7 @@ import uuid
 from sqlalchemy import Column, Enum, ForeignKey, String
 from sqlalchemy.orm import relationship
 from app.models.users.base_user import BaseUser
-from app.models.enums.user_role import UserRole
+from app.models.enums.user_state import UserRole
 
 class Announcement(BaseUser):
     __tablename__ = "announcement"

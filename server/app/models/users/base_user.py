@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 import uuid
 from sqlalchemy import Boolean, Column, DateTime, Enum, Integer, String, func
 from app.db.base import Base
-from app.models.enums.user_role import UserRole
+from app.models.enums.user_state import UserRole, UserStatus
 
 class BaseUser(Base):
     __tablename__ = "base_user"
@@ -46,6 +46,8 @@ class BaseUser(Base):
     # university individuality 
     # discriminator
     role = Column(Enum(UserRole), nullable=False)
+    # [approved, rejected, pending]
+    status = Column(Enum(UserStatus), nullable=False)
     
     __mapper_args__ = {
         "polymorphic_on": role

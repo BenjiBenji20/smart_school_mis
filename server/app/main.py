@@ -6,6 +6,8 @@ from fastapi import FastAPI
 
 from contextlib import asynccontextmanager
 
+from sqlalchemy import text
+
 from app.db.db_session import engine
 from app.db.base import Base
 from app.configs.settings import settings
@@ -18,14 +20,6 @@ from app.models.users.professor import Professor
 from app.models.users.program_chair import ProgramChair
 from app.models.users.registrar import Registrar
 from app.models.users.student import Student
-
-
-# models - pending users
-from app.models.users.pending_users.pending_enrollee import PendingEnrollee
-from app.models.users.pending_users.pending_dean import PendingDean
-from app.models.users.pending_users.pending_program_chair import PendingProgramChair
-from app.models.users.pending_users.pending_professor import PendingProfessor
-from app.models.users.pending_users.pending_registrar import PendingRegistrar
 
 
 # models - Academic Structures
@@ -63,7 +57,9 @@ from app.models.student_tasks.task_submission import TaskSubmission
 async def life_span(app: FastAPI):
     try:
         async with engine.begin() as conn:
+            # await conn.run_sync(Base.metadata.drop_all)
             await conn.run_sync(Base.metadata.create_all)
+
             print("\n\nRDBMS table are created successfully!")
             
         yield
