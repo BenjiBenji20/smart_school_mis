@@ -53,6 +53,15 @@ from app.models.student_tasks.task import Task
 from app.models.student_tasks.task_submission import TaskSubmission
 
 
+# routers
+from app.api.v1.routes.registration_router import registration_router
+from app.api.v1.routes.auth_router import auth_router
+
+
+from app.exceptions.customed_exception import *
+from app.exceptions.error_handler import *
+
+
 @asynccontextmanager
 async def life_span(app: FastAPI):
     try:
@@ -74,3 +83,18 @@ app = FastAPI(
     title=settings.APP_NAME,
     lifespan=life_span
 )
+
+# router registration
+app.include_router(registration_router)
+app.include_router(auth_router)
+
+
+# regiustering global exeception handler
+app.add_exception_handler(InternalServerError, internal_server_error_handler)
+app.add_exception_handler(UnprocessibleContentException, unprocessible_content_handler)
+app.add_exception_handler(ResourceNotFoundException, resource_not_found_handler)
+app.add_exception_handler(DuplicateEntryException, duplicate_entry_exception_handler)
+app.add_exception_handler(UnauthorizedAccessException, unauthorized_access_handler)
+app.add_exception_handler(ForbiddenAccessException, forbidden_access_handler)
+app.add_exception_handler(InvalidTokenException, invalid_token_handler)
+app.add_exception_handler(InvalidRequestException, invalid_request_handler)
