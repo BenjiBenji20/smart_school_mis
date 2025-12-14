@@ -14,6 +14,15 @@ class Settings(BaseSettings):
     POSTGRES_PORT: int
     POSTGRES_DATABASE: str
     
+    #auth security
+    MAX_FAILED_ATTEMPTS: int 
+    BAN_DURATION_MINUTES: int
+    
+    # JWT settings
+    JWT_SECRET_KEY: str
+    JWT_ALGORITHM: str
+    ACCESS_TOKEN_EXPIRE_MINUTES: int
+    
     class Config:
         env_file = ".env"
         extra = "ignore"
