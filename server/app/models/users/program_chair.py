@@ -5,6 +5,8 @@
 from sqlalchemy.orm import relationship
 from sqlalchemy import Column, ForeignKey, String
 from app.models.users.base_user import BaseUser
+from app.models.enums.user_state import UserRole
+
 
 class ProgramChair(BaseUser):
     __tablename__ = "program_chair"
@@ -18,8 +20,8 @@ class ProgramChair(BaseUser):
     program = relationship(
         "Program",
         back_populates="program_chair",
-        foreign_keys="Program.program_chair_id",
-        uselist=False
+        uselist=False,
+        post_update=True
     )
     
     
@@ -32,5 +34,5 @@ class ProgramChair(BaseUser):
     )
     
     __mapper_args__ = {
-        "polymorphic_identity": "program_chair",
+        "polymorphic_identity": UserRole.PROGRAM_CHAIR,
     }

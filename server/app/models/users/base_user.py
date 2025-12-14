@@ -17,7 +17,7 @@ class BaseUser(Base):
     
     # personal details
     first_name = Column(String(50), nullable=False)
-    middle_name = Column(String(50), nullable=False)
+    middle_name = Column(String(50), nullable=True)
     last_name = Column(String(50), nullable=False)
     suffix = Column(String(4), nullable=True)
     age = Column(Integer, default=18, nullable=False)
@@ -26,10 +26,10 @@ class BaseUser(Base):
     # account details
     email = Column(String(100), nullable=False, unique=True, index=True)
     cellphone_number = Column(String(13), nullable=False)
-    password_hash = Column(String(100), nullable=True)
+    password_hash = Column(String(100), nullable=False)
     
     # photo storage info
-    filename = Column(String, nullable=False)
+    filename = Column(String, nullable=True)
     file_url = Column(String, nullable=True)  # CDN or storage URL
     file_size = Column(Integer, nullable=True)  # Size in bytes
     mime_type = Column(String, nullable=True)  # image/jpeg, image/png
@@ -46,8 +46,8 @@ class BaseUser(Base):
     # university individuality 
     # discriminator
     role = Column(Enum(UserRole), nullable=False)
-    # [approved, rejected, pending]
-    status = Column(Enum(UserStatus), nullable=False)
+    # [Approved, Rejected, Pending]
+    status = Column(Enum(UserStatus), default=UserStatus.PENDING, nullable=False)
     
     __mapper_args__ = {
         "polymorphic_on": role

@@ -5,6 +5,7 @@
 from sqlalchemy import Column, ForeignKey, String
 from sqlalchemy.orm import relationship
 from app.models.users.base_user import BaseUser
+from app.models.enums.user_state import UserRole
 
 class Dean(BaseUser):
     __tablename__ = "dean"
@@ -16,8 +17,8 @@ class Dean(BaseUser):
     department = relationship(
         "Department",
         back_populates="dean",
-        foreign_keys="Department.dean_id",
-        uselist=False
+        uselist=False,
+        post_update=True
     )
     
     
@@ -30,6 +31,6 @@ class Dean(BaseUser):
     )
     
     __mapper_args__ = {
-        "polymorphic_identity": "dean",
+        "polymorphic_identity": UserRole.DEAN,
     }
     

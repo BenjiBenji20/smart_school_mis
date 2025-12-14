@@ -27,7 +27,7 @@ class Task(Base):
     
     
     # many-to-one relationship with ClassSection
-    course = relationship(
+    class_section  = relationship(
         "ClassSection",
         back_populates="tasks",
         uselist=False
@@ -45,7 +45,7 @@ class Task(Base):
     # one-to-many relationship with TaskSubmission
     task_submissions = relationship(
         "TaskSubmission",
-        back_populates="tasks",
+        back_populates="task",
         cascade="all, delete-orphan",
         lazy="dynamic"
     )

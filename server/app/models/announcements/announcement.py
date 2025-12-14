@@ -5,10 +5,10 @@
 import uuid
 from sqlalchemy import Column, Enum, ForeignKey, String
 from sqlalchemy.orm import relationship
-from app.models.users.base_user import BaseUser
+from app.db.base import Base
 from app.models.enums.user_state import UserRole
 
-class Announcement(BaseUser):
+class Announcement(Base):
     __tablename__ = "announcement"
     
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))

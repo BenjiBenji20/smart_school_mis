@@ -5,6 +5,7 @@
 from sqlalchemy.orm import relationship
 from sqlalchemy import Column, ForeignKey, String
 from app.models.users.base_user import BaseUser
+from app.models.enums.user_state import UserRole
 
 class Registrar(BaseUser):
     __tablename__ = "registrar"
@@ -21,5 +22,5 @@ class Registrar(BaseUser):
     )
 
     __mapper_args__ = {
-        "polymorphic_identity": "registrar",
+        "polymorphic_identity": UserRole.REGISTRAR,
     }

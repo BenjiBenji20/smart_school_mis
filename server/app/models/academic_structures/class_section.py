@@ -7,7 +7,7 @@ from sqlalchemy import Column, ForeignKey, String
 from app.db.base import Base
 from sqlalchemy.orm import relationship
 
-from app.models.academic_structures import professor_class_section
+from app.models.academic_structures.professor_class_section import professor_class_section
 
 
 class ClassSection(Base):
@@ -60,5 +60,21 @@ class ClassSection(Base):
         back_populates="class_section",
         cascade="all, delete-orphan",
         lazy="dynamic"
-    ) 
+    )
+    
+    # one-to-many relationship with Task
+    tasks = relationship(
+        "Task",
+        back_populates="class_section",
+        cascade="all, delete-orphan",
+        lazy="dynamic"
+    )
+    
+    # one-to-many relationship with Exam
+    exams = relationship(
+        "Exam",
+        back_populates="class_section",
+        cascade="all, delete-orphan",
+        lazy="dynamic"
+    )
     

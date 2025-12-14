@@ -14,8 +14,8 @@ class CheatingIncident(Base):
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     
     # foreign keys
-    exam_session_id = Column(String(36), ForeignKey("exam_session.id"), unique=True, nullable=False)
-    reviewed_by_id = Column(String(36), ForeignKey("base_user.id"), unique=True, nullable=False)
+    exam_session_id = Column(String(36), ForeignKey("exam_session.id"), nullable=False)
+    reviewed_by_id = Column(String(36), ForeignKey("base_user.id"), nullable=False)
      
     # many-to-one relationship with ExamSession
     exam_session = relationship(
@@ -28,7 +28,7 @@ class CheatingIncident(Base):
     # many-to-one relationship with BaseUser
     reviewed_by = relationship(
         "BaseUser",
-        back_populates="reviewed_by",
+        foreign_keys=[reviewed_by_id],
         uselist=False
     )
     

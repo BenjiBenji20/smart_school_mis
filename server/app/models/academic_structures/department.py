@@ -7,20 +7,16 @@ from sqlalchemy import Column, ForeignKey, String
 from sqlalchemy.orm import relationship
 from app.db.base import Base
 
-
+ 
 class Department(Base):
     __tablename__ = "department"
     
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     
-    # foreign keys
-    dean_id = Column(String(36), ForeignKey("dean.id"), nullable=True)
-    
     # one-to-one relationship with Dean 
     dean = relationship(
         "Dean",
         back_populates="department",
-        foreign_keys="Dean.department_id",
         uselist=False
     ) 
     
@@ -51,4 +47,12 @@ class Department(Base):
         lazy="dynamic"
     )
     
+    
+    # one-to-many relationship with Announcement
+    announcements = relationship(
+        "Announcement",
+        foreign_keys="Announcement.department_audience_id",
+        cascade="all, delete-orphan",
+        lazy="dynamic"
+    )
     

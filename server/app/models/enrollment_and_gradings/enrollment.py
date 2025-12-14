@@ -3,7 +3,7 @@
 """
 
 import uuid
-from sqlalchemy import Column, ForeignKey, String
+from sqlalchemy import Column, ForeignKey, String, UniqueConstraint
 from sqlalchemy.orm import relationship
 from app.db.base import Base
 
@@ -14,8 +14,8 @@ class Enrollment(Base):
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
 
     # foreign keys
-    student_id = Column(String(36), ForeignKey("student.id"), unique=True, nullable=False)
-    class_section_id = Column(String(36), ForeignKey("class_section.id"), unique=True, nullable=False)
+    student_id = Column(String(36), ForeignKey("student.id"), nullable=False)
+    class_section_id = Column(String(36), ForeignKey("class_section.id"), nullable=False)
 
     # one-to-one relationship with StudentGrade
     student_grade = relationship(
@@ -24,7 +24,7 @@ class Enrollment(Base):
         uselist=False
     )
 
- 
+  
     # many-to-one relationship with Student
     student = relationship(
         "Student",
@@ -38,5 +38,9 @@ class Enrollment(Base):
         "ClassSection",
         back_populates="enrollments",
         uselist=False
+    )
+    
+    __table_args__ = (
+        UniqueConstraint('student_id', 'class_section_id', name='uq_student_section'),
     )
     

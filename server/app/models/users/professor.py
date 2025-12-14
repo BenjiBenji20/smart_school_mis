@@ -5,7 +5,8 @@
 from sqlalchemy.orm import relationship
 from sqlalchemy import Column, ForeignKey, String
 from app.models.users.base_user import BaseUser
-from app.models.academic_structures import professor_class_section
+from app.models.academic_structures.professor_class_section import professor_class_section
+from app.models.enums.user_state import UserRole
 
 class Professor(BaseUser):
     __tablename__ = "professor"
@@ -14,6 +15,13 @@ class Professor(BaseUser):
     
     # foreign keys
     department_id = Column(String(36), ForeignKey("department.id"), nullable=False)
+    
+    # many-to-one relationship with Department
+    department = relationship(
+        "Department",
+        back_populates="professors",
+        uselist=False
+    )
     
     
     # many-to-many relationship with ClassSection
@@ -41,11 +49,29 @@ class Professor(BaseUser):
         cascade="all, delete-orphan",
         lazy="dynamic"
     )
-    
+     
     
     # one-to-many relationship with StudentGrade
-    encoded_by = relationship(
+    student_grades = relationship(
         "StudentGrade",
+        back_populates="professor",
+        cascade="all, delete-orphan",
+        lazy="dynamic"
+    )
+    
+    
+    # one-to-many relationship with TaskSubmission
+    task_submissions = relationship(
+        "TaskSubmission",
+        back_populates="professor",
+        cascade="all, delete-orphan",
+        lazy="dynamic"
+    )
+    
+    
+    # one-to-many relationship with ExamSession
+    exam_sessions = relationship(
+        "ExamSession",
         back_populates="professor",
         cascade="all, delete-orphan",
         lazy="dynamic"
@@ -61,6 +87,6 @@ class Professor(BaseUser):
     )
     
     __mapper_args__ = {
-        "polymorphic_identity": "professor",
+        "polymorphic_identity": UserRole.PROFESSOR
     }
     

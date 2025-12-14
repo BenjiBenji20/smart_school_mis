@@ -3,7 +3,7 @@
 """
 
 import uuid
-from sqlalchemy import Column, ForeignKey, String
+from sqlalchemy import Column, ForeignKey, String, UniqueConstraint
 from app.db.base import Base
 from sqlalchemy.orm import relationship
 
@@ -14,8 +14,8 @@ class ExamSession(Base):
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     
     # foreign keys
-    exam_id = Column(String(36), ForeignKey("exam.id"), unique=True, nullable=False)
-    student_id = Column(String(36), ForeignKey("student.id"), unique=True, nullable=False)
+    exam_id = Column(String(36), ForeignKey("exam.id"), nullable=False)
+    student_id = Column(String(36), ForeignKey("student.id"), nullable=False)
     professor_id = Column(String(36), ForeignKey("professor.id"), nullable=False)
     
     
@@ -49,5 +49,9 @@ class ExamSession(Base):
         back_populates="exam_session",
         cascade="all, delete-orphan",
         lazy="dynamic"
+    )
+    
+    __table_args__ = (
+        UniqueConstraint('exam_id', 'student_id', name='uq_exam_student'),
     )
     

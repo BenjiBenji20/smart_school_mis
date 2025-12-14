@@ -3,7 +3,7 @@
 """
 
 import uuid
-from sqlalchemy import Column, ForeignKey, String
+from sqlalchemy import Column, ForeignKey, String, UniqueConstraint
 from app.db.base import Base
 from sqlalchemy.orm import relationship
 
@@ -13,8 +13,8 @@ class TaskSubmission(Base):
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
 
     # foreign keys
-    task_id = Column(String(36), ForeignKey("task.id"), unique=True, nullable=False)
-    student_id = Column(String(36), ForeignKey("student.id"), unique=True, nullable=True)
+    task_id = Column(String(36), ForeignKey("task.id"), nullable=False)
+    student_id = Column(String(36), ForeignKey("student.id"), nullable=True)
     professor_id = Column(String(36), ForeignKey("professor.id"), nullable=True)
     
     
@@ -36,9 +36,13 @@ class TaskSubmission(Base):
     )
     
     
-    # many-to-one relationship with Task
+    # many-to-one relationship with Professor
     professor = relationship(
         "Professor",
         back_populates="task_submissions",
         uselist=False
+    )
+    
+    __table_args__ = (
+        UniqueConstraint('task_id', 'student_id', name='uq_task_student'),
     )

@@ -29,7 +29,7 @@ class StudentGrade(Base):
     # many-to-one relationship with Professor
     professor = relationship(
         "Professor",
-        back_populates="encoded_by",
+        back_populates="student_grades",
         uselist=False
     )
     

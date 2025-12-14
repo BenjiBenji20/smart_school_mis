@@ -27,9 +27,9 @@ class Exam(Base):
     ) 
     
     
-    # many-to-one relationship with ClassSession
-    class_ssion = relationship(
-        "ClassSession",
+    # many-to-one relationship with ClassSection
+    class_section = relationship(
+        "ClassSection",
         back_populates="exams",
         uselist=False
     )
