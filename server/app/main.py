@@ -63,6 +63,10 @@ from app.api.v1.routes.auth_router import auth_router
 from app.api.v1.routes.face_recognition_router import face_recognition_router
 
 
+# middlewares
+from app.middleware.filter_jwt import FilterJWT
+
+
 from app.exceptions.customed_exception import *
 from app.exceptions.error_handler import *
 
@@ -88,6 +92,10 @@ app = FastAPI(
     title=settings.APP_NAME,
     lifespan=life_span
 )
+
+#middleware
+app.add_middleware(FilterJWT)
+
 
 # router registration
 app.include_router(registration_router)
