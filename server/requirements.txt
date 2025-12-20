@@ -1,3 +1,6 @@
+# using python version 3.11.1 
+# installed cmake, visual studio communit and desktop c++ compiler
+
 # tools
 dotenv
 regex
@@ -25,3 +28,9 @@ PyJWT
 python-multipart
 bcrypt==3.2.2
 passlib==1.7.4
+
+# face recognition for authentication and authorization
+cvzone
+opencv-python
+dlib
+face_recognition
