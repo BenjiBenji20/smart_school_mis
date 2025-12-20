@@ -53,9 +53,14 @@ from app.models.student_tasks.task import Task
 from app.models.student_tasks.task_submission import TaskSubmission
 
 
+# # models - Face Recognitions
+from app.models.face_recognitions.face_encoding import FaceEncoding
+
+
 # routers
 from app.api.v1.routes.registration_router import registration_router
 from app.api.v1.routes.auth_router import auth_router
+from app.api.v1.routes.face_recognition_router import face_recognition_router
 
 
 from app.exceptions.customed_exception import *
@@ -87,6 +92,7 @@ app = FastAPI(
 # router registration
 app.include_router(registration_router)
 app.include_router(auth_router)
+app.include_router(face_recognition_router)
 
 
 # regiustering global exeception handler
