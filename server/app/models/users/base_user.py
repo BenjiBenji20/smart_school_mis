@@ -5,6 +5,8 @@
 from datetime import datetime, timezone
 import uuid
 from sqlalchemy import Boolean, Column, DateTime, Enum, Integer, String, func
+from sqlalchemy.orm import relationship
+
 from app.db.base import Base
 from app.models.enums.user_state import UserRole, UserStatus
 
@@ -48,6 +50,15 @@ class BaseUser(Base):
     role = Column(Enum(UserRole), nullable=False)
     # [Approved, Rejected, Pending]
     status = Column(Enum(UserStatus), default=UserStatus.PENDING, nullable=False)
+    
+    
+    # one-to-many relationship with FaceEncoding
+    face_encodings = relationship(
+        "FaceEncoding",
+        back_populates = "user",
+        cascade = "all, delete-orphan",
+        lazy="dynamic"
+    )
     
     __mapper_args__ = {
         "polymorphic_on": role
