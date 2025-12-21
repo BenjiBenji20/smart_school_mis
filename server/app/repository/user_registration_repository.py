@@ -2,6 +2,8 @@
     Date Written: 12/14/2025 at 8:42 AM
 """
 
+from datetime import date
+import random
 from typing import Optional
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -62,7 +64,26 @@ class UserRegistrationRepository(BaseRepository[BaseUser]):
         
         if user_role:
             user_to_approved.role = user_role
-        
+            
+        user_to_approved.university_code = self.generate_university_number(user_to_approved.role)
         await self.db.commit()
         return True
+    
+    
+    # ==== HELPER FUNCTIONS ====
+    def generate_university_number(self, role: UserRole) -> str:
+        role_code = ""
+        if role == UserRole.ADMINISTRATOR: role_code = "ADMN"
+        elif role == UserRole.REGISTRAR: role_code = "RGTR"
+        elif role == UserRole.DEAN: role_code = "DEAN"
+        elif role == UserRole.PROGRAM_CHAIR: role_code = "PRGC"
+        elif role == UserRole.PROFESSOR: role_code = "PROF"
+        else: role_code = "STDT"
+        
+        today = date.today().strftime("%m%d%Y")
+        rand = str(random.randint(0, 999))
+        while len(rand) < 4:
+            rand += "0"
+
+        return role_code + today + rand
         

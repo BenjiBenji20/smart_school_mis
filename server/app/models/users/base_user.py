@@ -31,6 +31,9 @@ class BaseUser(Base):
     cellphone_number = Column(String(13), nullable=False)
     password_hash = Column(String(100), nullable=False)
     
+    # generated after account approval
+    university_code = Column(String(16), nullable=True) # 3rd phase generation
+    
     # photo storage info [for 4th phase process]
     filename = Column(String, nullable=True)
     file_url = Column(String, nullable=True)  # CDN or storage URL

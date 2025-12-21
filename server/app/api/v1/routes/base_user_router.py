@@ -29,14 +29,14 @@ base_user_router = APIRouter(
 @base_user_router.post("/approve-registration", response_model=GenericResponse)
 async def approve_registration(
     id: str,
-    user_role: Optional[UserRole],
     user_credential: CredentialValidatorSchema,
     db: AsyncSession = Depends(get_async_db),
     current_user: BaseUser = Depends(get_current_user),
     allowed_roles = Depends(role_required([
         UserRole.ADMINISTRATOR, UserRole.REGISTRAR,
         UserRole.DEAN, UserRole.PROGRAM_CHAIR
-    ]))
+    ])),
+    user_role: Optional[UserRole] = None
 ):
     # validate user action
     auth_service = AuthService(db)
