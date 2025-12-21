@@ -55,8 +55,8 @@ class AuthService:
             now = datetime.now(timezone.utc)
             
             # check user status if approved as user
-            # if not self.validate_user_status(user.status):
-            #     raise UnauthorizedAccessException(f"Please wait for your registration to be approved.")
+            if not self.validate_user_status(user.status):
+                raise UnauthorizedAccessException(f"Please wait for your registration to be approved.")
             
             # Check if user is banned
             if user.banned_until:
@@ -95,7 +95,6 @@ class AuthService:
         except Exception as e:
             logger.error("Unexpected error during authentication: %s", str(e))
             raise InternalServerError("An error occurred during authentication")
-            
     
     
     def generate_access_token(self, payload: dict) -> str:

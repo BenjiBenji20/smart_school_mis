@@ -12,7 +12,7 @@ import logging
 from app.schemas.base_user_schema import BaseUserRequestSchema, BaseUserResponseSchema
 from app.repository.user_registration_repository import UserRegistrationRepository
 from app.exceptions.customed_exception import *
-from app.models.enums.user_state import UserStatus
+from app.models.enums.user_state import UserRole, UserStatus
 
 logger = logging.getLogger(__name__)
 
@@ -69,16 +69,17 @@ class RegistrationService:
                 middle_name=user_dict["middle_name"], 
                 last_name=user_dict["last_name"],
                 suffix=user_dict["suffix"],
-                age=user_dict["age"], 
+                age=user_dict["age"],
+                gender=user_dict["gender"],
                 complete_address=user_dict["complete_address"], 
                 # account details
                 email=user_dict["email"], 
-                cellphone_number=user_dict["cellphone_number"], 
+                cellphone_number=user_dict["cellphone_number"],
                 password_hash=user_dict["password_hash"], 
                 failed_attempts=0,
                 is_active=False,
                 # discriminator
-                role=user_dict["role"],
+                role=UserRole.PENDING,
                 # [Approved, Rejected, Pending]
                 status=UserStatus.PENDING
             )
