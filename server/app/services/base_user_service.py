@@ -25,6 +25,7 @@ class BaseUserService:
     async def approve_user(
         self, 
         approved_by: str, 
+        user_role: Optional[UserRole],
         approver_role: UserRole, 
         id: str
     ) -> dict:
@@ -44,14 +45,15 @@ class BaseUserService:
             :rtype: bool
         """
         user = await self.user_registration_repo.get_by_id(id)
+        role = user_role if user_role else user.role
         
-        if not can_approve(approver_role, user.role):
+        if not can_approve(approver_role, role):
             raise UnauthorizedAccessException(
-                f"{approver_role.value} cannot approve {user.role}"
+                f"{approver_role.value} cannot approve {role}"
             )
         
         await self.user_registration_repo.approve_pending_registration(
-            approved_by, id
+            approved_by, role, id
         )
         
         return {

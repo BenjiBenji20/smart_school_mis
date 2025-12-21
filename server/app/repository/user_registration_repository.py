@@ -2,6 +2,7 @@
     Date Written: 12/14/2025 at 8:42 AM
 """
 
+from typing import Optional
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -29,7 +30,9 @@ class UserRegistrationRepository(BaseRepository[BaseUser]):
         return result.scalars().first() is not None
     
     
-    async def approve_pending_registration(self, approved_by: str, id: str) -> bool:
+    async def approve_pending_registration(
+        self, approved_by: str, user_role: Optional[UserRole], id: str
+    ) -> bool:
         """
             Only user with higher role  can approved the user with lower role.
             
@@ -56,6 +59,9 @@ class UserRegistrationRepository(BaseRepository[BaseUser]):
         
         user_to_approved.status = UserStatus.APPROVED
         user_to_approved.approved_by = approved_by
+        
+        if user_role:
+            user_to_approved.role = user_role
         
         await self.db.commit()
         return True
