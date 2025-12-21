@@ -58,9 +58,9 @@ class FilterJWT(BaseHTTPMiddleware):
                 logger.error("\nUser not found.\nLoc:5th validation.\n")
                 raise ResourceNotFoundException(f"User with {email} email not found..")
                 
-            # if not self.validate_user_status(user.status):
-            #     logger.error("\nUser not approved.\nLoc:4th validation.\n")
-            #     raise UnauthorizedAccessException(f"Please wait for your registration to be approved.")
+            if not self.validate_user_status(user.status):
+                logger.error("\nUser not approved.\nLoc:4th validation.\n")
+                raise UnauthorizedAccessException(f"Please wait for your registration to be approved.")
             
             # check if user has banned time
             if user.banned_until and datetime.now(timezone.utc) < user.banned_until.replace(tzinfo=timezone.utc):
