@@ -4,7 +4,7 @@ from pydantic import BaseModel, Field, field_validator, EmailStr
 import regex
 
 from app.exceptions.customed_exception import UnprocessibleContentException
-from app.models.enums.user_state import UserRole
+from app.models.enums.user_state import UserRole, UserGender
 
 
 class BaseUserResponseSchema(BaseModel):
@@ -16,11 +16,12 @@ class BaseUserResponseSchema(BaseModel):
     last_name: str
     suffix: str | None
     age: int
+    gender: UserGender
     complete_address: str
     
     email: str
     cellphone_number: str
-    role: UserRole
+    role: UserRole | None
     is_active: bool
     
     class Config: 
@@ -31,13 +32,14 @@ class BaseUserRequestSchema(BaseModel):
     email: EmailStr = Field(..., description="Valid email address")
     cellphone_number: str = Field(..., min_length=11, max_length=13)
     password: str = Field(..., min_length=8, max_length=50)
-    role: UserRole = UserRole.STUDENT
+    role: UserRole | None = None
     
     first_name: str = Field(..., max_length=50)
     middle_name: str | None = Field(None, max_length=50)
     last_name: str = Field(..., max_length=50)
     suffix: str | None = Field(None, max_length=4)
     age: int = Field(default=18, gt=0, le=120)
+    gender: UserGender = Field(..., description="Male and Female only")
     complete_address: str = Field(default="Malabon City", max_length=255)
 
     @field_validator("first_name", "middle_name", "last_name")
@@ -68,3 +70,8 @@ class BaseUserRequestSchema(BaseModel):
             raise ValueError('Email must be less than 100 characters')
         return val.strip()
   
+  
+class CredentialValidatorSchema(BaseModel):
+    email: str
+    password: str
+    
