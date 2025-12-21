@@ -4,6 +4,7 @@
 from sqlalchemy.orm import relationship
 from sqlalchemy import Column, ForeignKey, String
 from app.models.users.base_user import BaseUser
+from app.models.enums.user_state import UserRole
 
 class Administrator(BaseUser):
     __tablename__ = "administrator"
@@ -19,5 +20,5 @@ class Administrator(BaseUser):
     )
  
     __mapper_args__ = {
-        "polymorphic_identity": "administrator"
+        "polymorphic_identity": UserRole.ADMINISTRATOR
     }
