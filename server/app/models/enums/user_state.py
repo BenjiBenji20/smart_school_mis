@@ -11,6 +11,7 @@ class UserRole(str, Enum):
     PROGRAM_CHAIR = "Program Chair"
     PROFESSOR = "Professor"
     STUDENT = "Student"
+    PENDING = "Pending"
     
     
 class UserStatus(str, Enum):
