@@ -64,6 +64,7 @@ class BaseUser(Base):
     )
     
     __mapper_args__ = {
-        "polymorphic_on": role
+        "polymorphic_on": role,
+        "polymorphic_identity": UserRole.PENDING
     }
     
