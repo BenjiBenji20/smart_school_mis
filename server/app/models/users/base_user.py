@@ -8,7 +8,7 @@ from sqlalchemy import Boolean, Column, DateTime, Enum, Integer, String, func
 from sqlalchemy.orm import relationship
 
 from app.db.base import Base
-from app.models.enums.user_state import UserRole, UserStatus
+from app.models.enums.user_state import UserRole, UserStatus, UserGender
 
 class BaseUser(Base):
     __tablename__ = "base_user"
@@ -23,6 +23,7 @@ class BaseUser(Base):
     last_name = Column(String(50), nullable=False)
     suffix = Column(String(4), nullable=True)
     age = Column(Integer, default=18, nullable=False)
+    gender = Column(Enum(UserGender), nullable=False)
     complete_address = Column(String(255), nullable=False)
     
     # account details
@@ -30,7 +31,7 @@ class BaseUser(Base):
     cellphone_number = Column(String(13), nullable=False)
     password_hash = Column(String(100), nullable=False)
     
-    # photo storage info
+    # photo storage info [for 4th phase process]
     filename = Column(String, nullable=True)
     file_url = Column(String, nullable=True)  # CDN or storage URL
     file_size = Column(Integer, nullable=True)  # Size in bytes
@@ -45,9 +46,11 @@ class BaseUser(Base):
     last_login = Column(DateTime(timezone=True), nullable=True)
     is_active = Column(Boolean, default=False, nullable=False)
     
-    # university individuality 
+    # action logged
+    approved_by = Column(String(255), nullable=True)
+    
     # discriminator
-    role = Column(Enum(UserRole), nullable=False)
+    role = Column(Enum(UserRole), nullable=True) # only the first admin should have role
     # [Approved, Rejected, Pending]
     status = Column(Enum(UserStatus), default=UserStatus.PENDING, nullable=False)
     

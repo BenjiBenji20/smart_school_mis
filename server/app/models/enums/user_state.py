@@ -18,3 +18,8 @@ class UserStatus(str, Enum):
     REJECTED = "Rejected"
     PENDING = "Pending"
     
+    
+class UserGender(str, Enum):
+    MALE = "Male"
+    FEMALE = "Female"
+    

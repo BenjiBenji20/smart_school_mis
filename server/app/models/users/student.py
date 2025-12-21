@@ -20,7 +20,7 @@ class Student(BaseUser):
     # Auto generated value with format (YYMMApplicationNumber)
     # once the registrar accepted the account registration.
     student_number = Column(Integer, nullable=True)
-    is_official_alumni = Column(Boolean, nullable=False)
+    is_official_alumni = Column(Boolean, nullable=True)
 
     enrolled_date = Column(Date, nullable=True)
     year_level = Column(Integer, nullable=True)
