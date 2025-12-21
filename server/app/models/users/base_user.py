@@ -50,7 +50,7 @@ class BaseUser(Base):
     approved_by = Column(String(255), nullable=True)
     
     # discriminator
-    role = Column(Enum(UserRole), nullable=True) # only the first admin should have role
+    role = Column(Enum(UserRole), nullable=False) # only the first admin should have role
     # [Approved, Rejected, Pending]
     status = Column(Enum(UserStatus), default=UserStatus.PENDING, nullable=False)
     
@@ -64,7 +64,6 @@ class BaseUser(Base):
     )
     
     __mapper_args__ = {
-        "polymorphic_on": role,
-        "polymorphic_identity": UserRole.PENDING
+        "polymorphic_on": role
     }
     

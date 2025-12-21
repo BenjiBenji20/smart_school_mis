@@ -79,7 +79,7 @@ class RegistrationService:
                 failed_attempts=0,
                 is_active=False,
                 # discriminator
-                role=UserRole.PENDING,
+                role=user_dict["role"],
                 # [Approved, Rejected, Pending]
                 status=UserStatus.PENDING
             )

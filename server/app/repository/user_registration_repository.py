@@ -29,7 +29,7 @@ class UserRegistrationRepository(BaseRepository[BaseUser]):
         return result.scalars().first() is not None
     
     
-    async def approve_pending_registration(self, approved_by: str, role: UserRole, id: str) -> bool:
+    async def approve_pending_registration(self, approved_by: str, id: str) -> bool:
         """
             Only user with higher role  can approved the user with lower role.
             
@@ -55,11 +55,8 @@ class UserRegistrationRepository(BaseRepository[BaseUser]):
             raise InvalidRequestException("User is not pending approval.")
         
         user_to_approved.status = UserStatus.APPROVED
-        user_to_approved.role = role
         user_to_approved.approved_by = approved_by
         
         await self.db.commit()
-        await self.db.refresh(user_to_approved)
-        
         return True
         
