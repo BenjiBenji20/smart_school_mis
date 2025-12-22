@@ -15,7 +15,7 @@ class Course(Base):
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
     
     title = Column(String(100), nullable=False)
-    course_code = Column(String(5), nullable=True)
+    course_code = Column(String(10), nullable=True)
     units = Column(SmallInteger, nullable=False)
     description = Column(String(255), nullable=True)
     
