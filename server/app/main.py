@@ -28,6 +28,10 @@ from app.models.academic_structures.course import Course
 from app.models.academic_structures.department import Department
 from app.models.academic_structures.program import Program
 from app.models.academic_structures.professor_class_section import professor_class_section
+from app.models.academic_structures.course_offering import CourseOffering
+from app.models.academic_structures.curriculum import Curriculum
+from app.models.academic_structures.curriculum_course import CurriculumCourse
+from app.models.academic_structures.term import Term
 
 
 # models - Announcements
