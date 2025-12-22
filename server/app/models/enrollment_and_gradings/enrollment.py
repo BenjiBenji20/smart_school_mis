@@ -16,6 +16,7 @@ class Enrollment(Base):
     # foreign keys
     student_id = Column(String(36), ForeignKey("student.id"), nullable=False)
     class_section_id = Column(String(36), ForeignKey("class_section.id"), nullable=False)
+    term_id = Column(String(36), ForeignKey("term.id"), nullable=False)
 
     # one-to-one relationship with StudentGrade
     student_grade = relationship(
@@ -31,6 +32,14 @@ class Enrollment(Base):
         back_populates="enrollments",
         uselist=False
     )
+    
+    
+    # many-to-one relationship with Term
+    term = relationship(
+        "Term",
+        back_populates="enrollments",
+        uselist=False
+    )
 
 
     # many-to-one relationship with ClassSection
@@ -41,6 +50,6 @@ class Enrollment(Base):
     )
     
     __table_args__ = (
-        UniqueConstraint('student_id', 'class_section_id', name='uq_student_section'),
+        UniqueConstraint('student_id', 'class_section_id', 'term_id', name='uq_student_section'),
     )
     

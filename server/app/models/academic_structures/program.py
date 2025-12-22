@@ -13,7 +13,16 @@ class Program(Base):
     
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
   
+    # foreign keys
     department_id = Column(String(36), ForeignKey("department.id"), nullable=True)
+    
+    # many-to-one relationship with Department
+    department = relationship(
+        "Department",
+        back_populates="programs",
+        uselist=False
+    )
+    
     
     # one-to-one relationship with ProgramChair
     program_chair = relationship(
@@ -21,14 +30,6 @@ class Program(Base):
         back_populates="program",
         uselist=False,
         post_update=True
-    )
-    
-     
-    # many-to-one relationship with Department
-    department = relationship(
-        "Department",
-        back_populates="programs",
-        uselist=False
     )
      
     
@@ -41,18 +42,9 @@ class Program(Base):
     )
     
     
-    # one-to-many relationship with Course
-    courses = relationship(
-        "Course",
-        back_populates="program",
-        cascade="all, delete-orphan",
-        lazy="dynamic"
-    )
-    
-    
-    # one-to-many relationship with Course
-    class_sections = relationship(
-        "ClassSection",
+    # one-to-many relationship with Curriculum
+    curriculums = relationship(
+        "Curriculum",
         back_populates="program",
         cascade="all, delete-orphan",
         lazy="dynamic"

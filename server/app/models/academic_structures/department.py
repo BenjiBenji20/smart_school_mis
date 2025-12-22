@@ -39,15 +39,6 @@ class Department(Base):
     )
     
     
-    # one-to-many relationship with ClassSection
-    class_sections = relationship(
-        "ClassSection",
-        back_populates="department",
-        cascade="all, delete-orphan",
-        lazy="dynamic"
-    )
-    
-    
     # one-to-many relationship with Announcement
     announcements = relationship(
         "Announcement",

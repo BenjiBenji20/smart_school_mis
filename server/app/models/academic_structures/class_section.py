@@ -16,32 +16,14 @@ class ClassSection(Base):
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     
     # foreign keys
-    course_id = Column(String(36), ForeignKey("course.id"), nullable=False)
-    department_id = Column(String(36), ForeignKey("department.id"), nullable=False)
-    program_id = Column(String(36), ForeignKey("program.id"), nullable=False)
-
-
-    # many-to-one relationship with Course
-    course = relationship(
-        "Course",
+    course_offering_id = Column(String(36), ForeignKey("course_offering.id"), nullable=True)
+    
+    
+    # many-to-one relationship with CourseOffering
+    course_offering = relationship(
+        "CourseOffering",
         back_populates="class_sections",
         uselist=False
-    )
-     
-    
-    # many-to-one relationship with Department
-    department = relationship(
-        "Department",
-        back_populates="class_sections",
-        uselist=False
-    )
-    
-    
-    # many-to-one relationship with Program
-    program = relationship(
-        "Program",
-        back_populates="class_sections",
-        uselist=False 
     )
 
 
@@ -62,6 +44,7 @@ class ClassSection(Base):
         lazy="dynamic"
     )
     
+    
     # one-to-many relationship with Task
     tasks = relationship(
         "Task",
@@ -69,6 +52,7 @@ class ClassSection(Base):
         cascade="all, delete-orphan",
         lazy="dynamic"
     )
+    
     
     # one-to-many relationship with Exam
     exams = relationship(
