@@ -66,6 +66,7 @@ from app.api.v1.routes.registration_router import registration_router
 from app.api.v1.routes.auth_router import auth_router
 from app.api.v1.routes.face_recognition_router import face_recognition_router
 from app.api.v1.routes.base_user_router import base_user_router
+from app.api.v1.routes.registrar_router import registrar_router
 
 
 # middlewares
@@ -107,6 +108,7 @@ app.include_router(registration_router)
 app.include_router(auth_router)
 app.include_router(face_recognition_router)
 app.include_router(base_user_router)
+app.include_router(registrar_router)
 
 
 # regiustering global exeception handler
