@@ -29,6 +29,17 @@ class AuthRepository:
         return result.scalars().first()
     
     
+    async def get_user_by_university_code(self, university_code: str) -> Optional[BaseUser]:
+        """
+            Find user using its unique university code. 
+            Use for: authentication 
+        """
+        result = await self.db.execute(
+            select(BaseUser).where(BaseUser.university_code == university_code)
+        )
+        return result.scalars().first()
+    
+    
     async def is_email_exists(self, email: str) -> bool:
         """Check if email is already registered."""
         result = await self.db.execute(
