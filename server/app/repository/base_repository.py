@@ -47,7 +47,7 @@ class BaseRepository(Generic[ModelType]):
     # ============================================
     # READ
     # ============================================
-    async def get_by_id(self, id: int) -> Optional[ModelType]:
+    async def get_by_id(self, id: str) -> Optional[ModelType]:
         """Get single record by ID."""
         result = await self.db.execute(
             select(self.model).where(self.model.id == id)
@@ -111,7 +111,7 @@ class BaseRepository(Generic[ModelType]):
     # ============================================
     # UPDATE
     # ============================================
-    async def update(self, id: int, **kwargs) -> Optional[ModelType]:
+    async def update(self, id: str, **kwargs) -> Optional[ModelType]:
         """Update record by ID."""
         instance = await self.get_by_id(id)
         if not instance:
@@ -139,7 +139,7 @@ class BaseRepository(Generic[ModelType]):
     # ============================================
     # DELETE
     # ============================================
-    async def delete(self, id: int) -> bool:
+    async def delete(self, id: str) -> bool:
         """Delete record by ID."""
         instance = await self.get_by_id(id)
         if not instance:
@@ -161,7 +161,7 @@ class BaseRepository(Generic[ModelType]):
         return result.rowcount
     
     
-    async def soft_delete(self, id: int) -> Optional[ModelType]:
+    async def soft_delete(self, id: str) -> Optional[ModelType]:
         """Soft delete (set is_active=False)."""
         if not hasattr(self.model, 'is_active'):
             raise AttributeError(f"{self.model.__name__} doesn't have is_active field")
