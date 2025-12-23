@@ -16,6 +16,7 @@ from app.repository.academic_structure.program_repository import ProgramReposito
 from app.repository.academic_structure.curriculum_repository import CurriculumRepository
 from app.repository.academic_structure.course_repository import CourseRepository
 from app.repository.academic_structure.curriculum_course_repository import CurriculumCourseRepository
+from app.repository.academic_structure.term_repository import TermRepository
 
 
 class AcademicStructureService:
@@ -32,6 +33,7 @@ class AcademicStructureService:
         self.curriculum_repo = CurriculumRepository(db)
         self.course_repo = CourseRepository(db)
         self.curriculum_course_repo = CurriculumCourseRepository(db)
+        self.term_repo = TermRepository(db)
         
         
     async def register_department(
@@ -255,4 +257,54 @@ class AcademicStructureService:
             )
 
         return response
-      
+    
+    
+    async def register_term(
+        self, 
+        terms: List[RegisterTermRequestSchema], 
+        requested_by: str
+    ) -> List[RegisterTermResponseSchema]:
+        """
+            Register one or multiple terms (Registrar only) 
+        
+            :param courses: list of terms (can be 1)
+            :return: with appropriate data log
+            :rtype: RegisterTermResponseSchema
+        """
+        payload: list[dict] = []
+
+        for term in terms:
+            data = term.model_dump()
+            payload.append(data)
+            
+        # register terms all at once
+        registered_terms = await self.term_repo.create_many(payload)
+        
+        if registered_terms is None:
+            raise UnprocessibleContentException(
+                "Term registration failed. Try again."
+            )
+        
+        response: List[RegisterTermResponseSchema] = []
+        
+        for term in registered_terms:
+            response.append(
+                RegisterTermResponseSchema(
+                    id=str(term.id),
+                    created_at=term.created_at,
+                    academic_year_start=term.academic_year_start,
+                    academic_year_end=term.academic_year_end,
+                    enrollment_start=term.enrollment_start,
+                    enrollment_end=term.enrollment_end,
+                    semester_period=term.semester_period,
+                    status=term.status,
+                    request_log=GenericResponse(
+                        success=True,
+                        requested_at=datetime.now(timezone.utc),
+                        requested_by=requested_by
+                    )
+                )
+            )
+
+        return response
+  

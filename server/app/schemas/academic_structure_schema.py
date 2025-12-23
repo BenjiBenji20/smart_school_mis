@@ -6,7 +6,7 @@ from datetime import datetime
 from pydantic import BaseModel, Field
 
 from app.schemas.generic_schema import GenericResponse
-from app.models.enums.academic_structure_state import CurriculumStatus
+from app.models.enums.academic_structure_state import CurriculumStatus, SemesterPeriod, TermStatus
 
 # ==============================================
 # DEPARTMENT SCHEMAS
@@ -114,4 +114,31 @@ class RegisterCurriculumCourseResponseSchema(BaseModel):
     course_id: str
     
     request_log: GenericResponse
+     
+     
+# ==============================================
+# TERM SCHEMAS
+# ==============================================  
+class RegisterTermRequestSchema(BaseModel):
+    # Enforces a 4-digit positive integer (2000 to 3000)
+    academic_year_start: int = Field(gt=1999, lt=3001) 
+    academic_year_end: int = Field(gt=1999, lt=3001)
+    enrollment_start: datetime
+    enrollment_end: datetime
+
+    semester_period: SemesterPeriod
+    status: TermStatus = TermStatus.DRAFT
     
+    
+class RegisterTermResponseSchema(BaseModel):
+    id: str
+    created_at: datetime
+    academic_year_start: int 
+    academic_year_end: int
+    enrollment_start: datetime
+    enrollment_end: datetime
+
+    semester_period: SemesterPeriod
+    status: TermStatus
+    
+    request_log: GenericResponse

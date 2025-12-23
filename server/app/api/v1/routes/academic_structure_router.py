@@ -17,7 +17,7 @@ from app.services.academic_structure_service import AcademicStructureService
 
 academic_structure_router = APIRouter(
     prefix="/api/academic-structure",
-    tags=["Only registrar role is allowed for these APIs"]
+    tags=["Only registrar and dean role are allowed for these APIs"]
 )
 
 @academic_structure_router.post("/register-department", response_model=RegisterDepartmentResponseSchema)
@@ -101,5 +101,24 @@ async def register_curriculum_course(
     service = AcademicStructureService(db)
     return await service.register_curriculum_course(
         curriculum_courses=curriculum_courses,
+        requested_by=current_user.first_name + " " + current_user.last_name
+    )
+
+
+@academic_structure_router.post("/register-term", response_model=List[RegisterTermResponseSchema])
+async def register_term(
+    terms: List[RegisterTermRequestSchema],
+    db: AsyncSession = Depends(get_async_db),
+    current_user: Registrar = Depends(get_current_user),
+    allowed_roles = Depends(role_required([UserRole.REGISTRAR]))
+):
+    """
+        Create term
+        default term status is DRAFT
+        default term academic_period is FIRST
+    """
+    service = AcademicStructureService(db)
+    return await service.register_term(
+        terms=terms,
         requested_by=current_user.first_name + " " + current_user.last_name
     )
