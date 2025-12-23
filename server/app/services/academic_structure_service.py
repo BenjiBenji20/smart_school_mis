@@ -11,9 +11,12 @@ from app.schemas.academic_structure_schema import *
 from app.exceptions.customed_exception import *
 from app.schemas.generic_schema import GenericResponse
 
-from app.repository.academic_structure.course_repository import CourseRepository
 from app.repository.academic_structure.department_repository import DepartmentRepository
 from app.repository.academic_structure.program_repository import ProgramRepository
+from app.repository.academic_structure.curriculum_repository import CurriculumRepository
+from app.repository.academic_structure.course_repository import CourseRepository
+from app.repository.academic_structure.curriculum_course_repository import CurriculumCourseRepository
+
 
 class AcademicStructureService:
     """
@@ -24,9 +27,11 @@ class AcademicStructureService:
     def __init__(self, db: AsyncSession):
         self.db = db
         
-        self.course_repo = CourseRepository(db)
         self.department_repo = DepartmentRepository(db)
         self.program_repo = ProgramRepository(db)
+        self.curriculum_repo = CurriculumRepository(db)
+        self.course_repo = CourseRepository(db)
+        self.curriculum_course_repo = CurriculumCourseRepository(db)
         
         
     async def register_department(
@@ -109,6 +114,44 @@ class AcademicStructureService:
             )
 
         return response
+    
+    
+    async def register_curriculum(
+        self,
+        curriculum: RegisterCurriculumRequestSchema,
+        requested_by: str
+    ) -> RegisterCurriculumResponseSchema:
+        """
+            Register one curriculum at a time
+            to avoid spamming.
+            
+            Using CurriculumRepository.
+        """
+        curriculum_dict = curriculum.model_dump()
+        
+        # register curriculum
+        register_curriculum = await self.curriculum_repo.create(
+            title = curriculum_dict["title"],
+            effective_from = curriculum_dict["effective_from"],
+            effective_to = curriculum_dict["effective_to"],
+            status = curriculum_dict["status"],
+            program_id = curriculum_dict["program_id"]
+        )
+        
+        return RegisterCurriculumResponseSchema(
+            id=register_curriculum.id,
+            created_at=register_curriculum.created_at,
+            title=register_curriculum.title,
+            effective_from=register_curriculum.effective_from,
+            effective_to=register_curriculum.effective_to,
+            status=register_curriculum.status,
+            program_id=register_curriculum.program_id,
+            request_log=GenericResponse(
+                success=True,
+                requested_at=datetime.now(timezone.utc),
+                requested_by=requested_by
+            )
+        )
         
         
     async def register_course(
@@ -162,4 +205,54 @@ class AcademicStructureService:
             )
 
         return response
+    
+    
+    async def register_curriculum_course(
+        self, 
+        curriculum_courses: List[RegisterCurriculumCourseRequestSchema], 
+        requested_by: str
+    ) -> List[RegisterCurriculumCourseResponseSchema]:
+        """
+            Register one or multiple curriculum courses (Registrar only) 
         
+            :param courses: list of courses (can be 1)
+            :type courses: List[Course]
+            :return: with appropriate data log
+            :rtype: RegisterCurriculumCourseResponseSchema
+        """
+        payload: list[dict] = []
+
+        for curriculum_course in curriculum_courses:
+            data = curriculum_course.model_dump()
+            payload.append(data)
+            
+        # register curriculum courses all at once
+        registered_curriculum_courses = await self.curriculum_course_repo.create_many(payload)
+        
+        if registered_curriculum_courses is None:
+            raise UnprocessibleContentException(
+                "Curriculum course registration failed. Try again."
+            )
+        
+        response: List[RegisterCurriculumCourseResponseSchema] = []
+        
+        for curriculum_course in registered_curriculum_courses:
+            response.append(
+                RegisterCurriculumCourseResponseSchema(
+                    id=str(curriculum_course.id),
+                    created_at=curriculum_course.created_at,
+                    year_level=curriculum_course.year_level,
+                    semester=curriculum_course.semester,
+                    is_required=curriculum_course.is_required,
+                    curriculum_id=curriculum_course.curriculum_id,
+                    course_id=curriculum_course.course_id,
+                    request_log=GenericResponse(
+                        success=True,
+                        requested_at=datetime.now(timezone.utc),
+                        requested_by=requested_by
+                    )
+                )
+            )
+
+        return response
+      

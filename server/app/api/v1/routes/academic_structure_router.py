@@ -54,6 +54,23 @@ async def register_program(
     )
 
 
+@academic_structure_router.post("/register-curriculum", response_model=RegisterCurriculumResponseSchema)
+async def register_curriculum(
+    curriculum: RegisterCurriculumRequestSchema,
+    db: AsyncSession = Depends(get_async_db),
+    current_user: Registrar = Depends(get_current_user),
+    allowed_roles = Depends(role_required([UserRole.REGISTRAR]))
+):
+    """
+        Register curriculum one at a time (Registrar only)
+    """
+    service = AcademicStructureService(db)
+    return await service.register_curriculum(
+        curriculum=curriculum,
+        requested_by=current_user.first_name + " " + current_user.last_name
+    )
+
+
 @academic_structure_router.post("/register-course", response_model=List[RegisterCourseResponseSchema])
 async def register_course(
     courses: List[RegisterCourseRequestSchema],
@@ -70,3 +87,19 @@ async def register_course(
         requested_by=current_user.first_name + " " + current_user.last_name
     )
     
+
+@academic_structure_router.post("/register-curriculum-course", response_model=List[RegisterCurriculumCourseResponseSchema])
+async def register_curriculum_course(
+    curriculum_courses: List[RegisterCurriculumCourseRequestSchema],
+    db: AsyncSession = Depends(get_async_db),
+    current_user: Registrar = Depends(get_current_user),
+    allowed_roles = Depends(role_required([UserRole.REGISTRAR]))
+):
+    """
+        Register one or multiple curriculum courses (Registrar only)
+    """
+    service = AcademicStructureService(db)
+    return await service.register_curriculum_course(
+        curriculum_courses=curriculum_courses,
+        requested_by=current_user.first_name + " " + current_user.last_name
+    )

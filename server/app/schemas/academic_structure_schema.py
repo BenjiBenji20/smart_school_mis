@@ -6,6 +6,7 @@ from datetime import datetime
 from pydantic import BaseModel, Field
 
 from app.schemas.generic_schema import GenericResponse
+from app.models.enums.academic_structure_state import CurriculumStatus
 
 # ==============================================
 # DEPARTMENT SCHEMAS
@@ -49,6 +50,29 @@ class RegisterProgramResponseSchema(BaseModel):
 
 
 # ==============================================
+# CURRICULUM SCHEMAS
+# ==============================================
+class RegisterCurriculumRequestSchema(BaseModel):
+    title: str = Field(..., max_length=100)
+    effective_from: int
+    effective_to: int | None = None
+    status: CurriculumStatus
+    program_id: str = Field(..., max_length=36)
+    
+    
+class RegisterCurriculumResponseSchema(BaseModel):
+    id: str
+    created_at: datetime
+    title: str
+    effective_from: int
+    effective_to: int
+    status: CurriculumStatus
+    program_id: str
+        
+    request_log: GenericResponse
+
+
+# ==============================================
 # COURSE SCHEMAS
 # ==============================================
 class RegisterCourseRequestSchema(BaseModel):
@@ -66,5 +90,28 @@ class RegisterCourseResponseSchema(BaseModel):
     units: int
     description: str
 
+    request_log: GenericResponse
+    
+    
+# ==============================================
+# CURRICULUMCOURSE SCHEMAS
+# ==============================================    
+class RegisterCurriculumCourseRequestSchema(BaseModel):
+    year_level: int
+    semester: int
+    is_required: bool
+    curriculum_id: str = Field(..., max_length=36)
+    course_id: str = Field(..., max_length=36)
+    
+    
+class RegisterCurriculumCourseResponseSchema(BaseModel):
+    id: str
+    created_at: datetime
+    year_level: int
+    semester: int
+    is_required: bool
+    curriculum_id: str
+    course_id: str
+    
     request_log: GenericResponse
     
