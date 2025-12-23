@@ -14,8 +14,8 @@ class Course(Base):
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
     
-    title = Column(String(100), nullable=False)
-    course_code = Column(String(10), nullable=True)
+    title = Column(String(100), unique=True, nullable=False)
+    course_code = Column(String(10), unique=True, nullable=True)
     units = Column(SmallInteger, nullable=False)
     description = Column(String(255), nullable=True)
     

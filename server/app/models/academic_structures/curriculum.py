@@ -18,7 +18,7 @@ class Curriculum(Base):
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
     
-    title = Column(String(100), nullable=False) # e.g. BSIT Curriculum 2025–2029
+    title = Column(String(100), unique=True, nullable=False) # e.g. BSIT Curriculum 2025–2029
     effective_from = Column(SmallInteger, nullable=False)  # e.g. 2025
     effective_to = Column(SmallInteger, nullable=True)     # e.g. 2029 (nullable if ongoing)
     status = Column(Enum(CurriculumStatus), nullable=False) # DRAFT | ACTIVE | RETIRED

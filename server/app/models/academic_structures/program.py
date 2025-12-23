@@ -15,7 +15,7 @@ class Program(Base):
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
     
-    title = Column(String(100), nullable=False)
+    title = Column(String(100), unique=True, nullable=False)
     program_code = Column(String(10), nullable=True)
     description = Column(String(255), nullable=True)
     
