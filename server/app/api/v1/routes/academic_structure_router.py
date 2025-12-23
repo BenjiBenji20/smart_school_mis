@@ -161,3 +161,20 @@ async def get_active_year_term(
         requested_by=current_user.first_name + " " + current_user.last_name
     )
     
+
+@academic_structure_router.get("/term/active-enrollment", response_model=List[TermResponseSchema])
+async def get_active_enrollment(
+    db: AsyncSession = Depends(get_async_db),
+    current_user: Registrar = Depends(get_current_user),
+    allowed_roles = Depends(role_required([UserRole.REGISTRAR]))
+):
+    """
+        Get active enrollments.
+        Enrollments that has status of OPEN and within or in the current 
+        enrollment_start and enrollment_end.
+    """
+    service = AcademicStructureService(db)
+    return await service.get_active_enrollment(
+        requested_by=current_user.first_name + " " + current_user.last_name
+    )
+    

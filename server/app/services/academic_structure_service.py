@@ -400,3 +400,40 @@ class AcademicStructureService:
 
         return response
     
+    
+    async def get_active_enrollment(
+        self,
+        requested_by: str
+    ) -> List[TermResponseSchema]:
+        """
+            Get active enrollments.
+            Enrollments that has status of OPEN and within or in the current 
+            enrollment_start and enrollment_end.
+        """
+        current_datetime = datetime.now(timezone.utc)
+        active_terms = await self.term_repo.get_active_enrollment(current_datetime)
+        
+        response: List[TermResponseSchema] = []
+        
+        for term in active_terms:
+            response.append(
+                TermResponseSchema(
+                    id=str(term.id),
+                    created_at=term.created_at,
+                    academic_year_start=term.academic_year_start,
+                    academic_year_end=term.academic_year_end,
+                    enrollment_start=term.enrollment_start,
+                    enrollment_end=term.enrollment_end,
+                    semester_period=term.semester_period,
+                    status=term.status,
+                    request_log=GenericResponse(
+                        success=True,
+                        requested_at=datetime.now(timezone.utc),
+                        requested_by=requested_by,
+                        description=f"Get active terms within the enrollment {current_datetime.strftime('%m/%d/%Y %H:%M')} and status open."
+                    )
+                )
+            )
+
+        return response
+    

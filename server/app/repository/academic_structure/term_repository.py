@@ -2,6 +2,7 @@
     Date Written: 12/23/2025 at 6:07 PM
 """
 
+from datetime import datetime
 from typing import List
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import and_, select
@@ -26,6 +27,24 @@ class TermRepository(BaseRepository[Term]):
             and_(
                 Term.academic_year_start == current_year,
                 Term.academic_year_end >= current_year,
+                Term.status == TermStatus.OPEN
+            )
+        )
+        
+        results = await self.db.execute(query)
+        return results.scalars().all()
+    
+    
+    async def get_active_enrollment(self, current_datetime: datetime) -> List[Term]:
+        """
+            Get active enrollments.
+            Enrollments that has status of OPEN and within or in the current 
+            enrollment_start and enrollment_end.
+        """
+        query = select(Term).where(
+            and_(
+                Term.enrollment_start <= current_datetime,
+                Term.enrollment_end >= current_datetime,
                 Term.status == TermStatus.OPEN
             )
         )
