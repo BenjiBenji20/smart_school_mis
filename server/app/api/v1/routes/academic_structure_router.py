@@ -105,9 +105,9 @@ async def register_curriculum_course(
     )
 
 
-@academic_structure_router.post("/register-term", response_model=List[RegisterTermResponseSchema])
+@academic_structure_router.post("/register-term", response_model=List[TermResponseSchema])
 async def register_term(
-    terms: List[RegisterTermRequestSchema],
+    terms: List[TermRequestSchema],
     db: AsyncSession = Depends(get_async_db),
     current_user: Registrar = Depends(get_current_user),
     allowed_roles = Depends(role_required([UserRole.REGISTRAR]))
@@ -125,7 +125,7 @@ async def register_term(
 
 
 @academic_structure_router.patch("/term/{id}/status/{status}", response_model=GenericResponse)
-async def manage_term_status(
+async def update_term_status(
     id: str,
     status: TermStatus,
     db: AsyncSession = Depends(get_async_db),
@@ -133,14 +133,31 @@ async def manage_term_status(
     allowed_roles = Depends(role_required([UserRole.REGISTRAR]))
 ):
     """
-        Manage term status allowed only for registrar role.
+        Update term status allowed only for registrar role.
         term has default DRAFT status when its first created.
-        registrar must manage it according to status needed.
+        registrar must update it according to status needed.
     """
     service = AcademicStructureService(db)
-    return await service.manage_term_status(
+    return await service.update_term_status(
         id=id,
         status=status,
+        requested_by=current_user.first_name + " " + current_user.last_name
+    )
+
+
+@academic_structure_router.get("/term/active-year", response_model=List[TermResponseSchema])
+async def get_active_year_term(
+    db: AsyncSession = Depends(get_async_db),
+    current_user: Registrar = Depends(get_current_user),
+    allowed_roles = Depends(role_required([UserRole.REGISTRAR]))
+):
+    """
+        Get active terms.
+        Terms that has status of OPEN and within or in the current 
+        academic_year_start and academic_year_end.
+    """
+    service = AcademicStructureService(db)
+    return await service.get_active_year_term(
         requested_by=current_user.first_name + " " + current_user.last_name
     )
     

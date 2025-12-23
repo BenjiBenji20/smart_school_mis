@@ -5,7 +5,7 @@
 from typing import List
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 
 from app.schemas.academic_structure_schema import *
 from app.exceptions.customed_exception import *
@@ -24,8 +24,13 @@ from app.models.academic_structures.term import Term
 class AcademicStructureService:
     """
         Services exclusive only to registrar role.
-        - Register new department
-        - Register new courses
+            - Register new department
+            - Register new programs
+            - Register new curriculum
+            - Register new courses
+            - Register new curriculum courses
+            - Register new terms
+            - Update term's status
     """
     def __init__(self, db: AsyncSession):
         self.db = db
@@ -268,9 +273,9 @@ class AcademicStructureService:
     
     async def register_term(
         self, 
-        terms: List[RegisterTermRequestSchema], 
+        terms: List[TermRequestSchema], 
         requested_by: str
-    ) -> List[RegisterTermResponseSchema]:
+    ) -> List[TermResponseSchema]:
         """
             Register one or multiple terms (Registrar only) 
         
@@ -292,11 +297,11 @@ class AcademicStructureService:
                 "Term registration failed. Try again."
             )
         
-        response: List[RegisterTermResponseSchema] = []
+        response: List[TermResponseSchema] = []
         
         for term in registered_terms:
             response.append(
-                RegisterTermResponseSchema(
+                TermResponseSchema(
                     id=str(term.id),
                     created_at=term.created_at,
                     academic_year_start=term.academic_year_start,
@@ -316,7 +321,8 @@ class AcademicStructureService:
 
         return response
   
-    async def manage_term_status(
+  
+    async def update_term_status(
         self,
         id: str,
         status: TermStatus,
@@ -357,3 +363,40 @@ class AcademicStructureService:
                 description=f"Term status successfully updated to {status.value.lower()}."
             )
         
+        
+    async def get_active_year_term(
+        self,
+        requested_by: str
+    ) -> List[TermResponseSchema]:
+        """
+            Get active terms.
+            Terms that has status of OPEN and within or in the current 
+            academic_year_start and academic_year_end.
+        """
+        current_year = int(date.today().year)
+        active_terms = await self.term_repo.get_active_year_term(current_year)
+        
+        response: List[TermResponseSchema] = []
+        
+        for term in active_terms:
+            response.append(
+                TermResponseSchema(
+                    id=str(term.id),
+                    created_at=term.created_at,
+                    academic_year_start=term.academic_year_start,
+                    academic_year_end=term.academic_year_end,
+                    enrollment_start=term.enrollment_start,
+                    enrollment_end=term.enrollment_end,
+                    semester_period=term.semester_period,
+                    status=term.status,
+                    request_log=GenericResponse(
+                        success=True,
+                        requested_at=datetime.now(timezone.utc),
+                        requested_by=requested_by,
+                        description=f"Get active terms within the current year {current_year} and status open."
+                    )
+                )
+            )
+
+        return response
+    

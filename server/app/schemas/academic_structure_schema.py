@@ -119,7 +119,7 @@ class RegisterCurriculumCourseResponseSchema(BaseModel):
 # ==============================================
 # TERM SCHEMAS
 # ==============================================  
-class RegisterTermRequestSchema(BaseModel):
+class TermRequestSchema(BaseModel):
     # Enforces a 4-digit positive integer (2000 to 3000)
     academic_year_start: int = Field(gt=1999, lt=3001) 
     academic_year_end: int = Field(gt=1999, lt=3001)
@@ -130,7 +130,7 @@ class RegisterTermRequestSchema(BaseModel):
     status: TermStatus = TermStatus.DRAFT
     
     
-class RegisterTermResponseSchema(BaseModel):
+class TermResponseSchema(BaseModel):
     id: str
     created_at: datetime
     academic_year_start: int 
