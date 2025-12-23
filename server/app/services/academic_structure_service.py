@@ -18,6 +18,8 @@ from app.repository.academic_structure.course_repository import CourseRepository
 from app.repository.academic_structure.curriculum_course_repository import CurriculumCourseRepository
 from app.repository.academic_structure.term_repository import TermRepository
 
+from app.models.academic_structures.term import Term
+
 
 class AcademicStructureService:
     """
@@ -65,7 +67,8 @@ class AcademicStructureService:
             request_log=GenericResponse(
                 success=True,
                 requested_at=datetime.now(timezone.utc),
-                requested_by=requested_by
+                requested_by=requested_by,
+                description=f"Register department {register_department.title}"
             )
         )
         
@@ -110,7 +113,8 @@ class AcademicStructureService:
                     request_log=GenericResponse(
                         success=True,
                         requested_at=datetime.now(timezone.utc),
-                        requested_by=requested_by
+                        requested_by=requested_by,
+                        description=f"Register program {program.title}"
                     )
                 )
             )
@@ -151,7 +155,8 @@ class AcademicStructureService:
             request_log=GenericResponse(
                 success=True,
                 requested_at=datetime.now(timezone.utc),
-                requested_by=requested_by
+                requested_by=requested_by,
+                description=f"Register curriculum {register_curriculum.title}"
             )
         )
         
@@ -201,7 +206,8 @@ class AcademicStructureService:
                     request_log=GenericResponse(
                         success=True,
                         requested_at=datetime.now(timezone.utc),
-                        requested_by=requested_by
+                        requested_by=requested_by,
+                        description=f"Register course {course.title}"
                     )
                 )
             )
@@ -251,7 +257,8 @@ class AcademicStructureService:
                     request_log=GenericResponse(
                         success=True,
                         requested_at=datetime.now(timezone.utc),
-                        requested_by=requested_by
+                        requested_by=requested_by,
+                        description=f"Register curriculum course."
                     )
                 )
             )
@@ -301,10 +308,52 @@ class AcademicStructureService:
                     request_log=GenericResponse(
                         success=True,
                         requested_at=datetime.now(timezone.utc),
-                        requested_by=requested_by
+                        requested_by=requested_by,
+                        description=f"Register term."
                     )
                 )
             )
 
         return response
   
+    async def manage_term_status(
+        self,
+        id: str,
+        status: TermStatus,
+        requested_by: str
+    ) -> GenericResponse:
+        """
+            Manage term status allowed only for registrar role.
+            term has default DRAFT status when its first created.
+            registrar must manage it according to status needed.
+            
+            param: id: for the target term to manage
+            param: status: the status to be switch by the term
+        """
+        term: Term = await self.term_repo.get_by_id(id)
+        
+        if not term:
+            raise ResourceNotFoundException(f"Term not found.")
+        
+        # invalidate update if current term status is the same with request.
+        if status == term.status:
+            return GenericResponse(
+                success=False,
+                requested_at=datetime.now(timezone.utc),
+                requested_by=requested_by,
+                description=f"Term is already {status.value.lower()}. No actions happened."
+            )
+  
+        # update the term's status
+        await self.term_repo.update(
+            id=id,
+            status=status
+        )
+        
+        return GenericResponse(
+                success=True,
+                requested_at=datetime.now(timezone.utc),
+                requested_by=requested_by,
+                description=f"Term status successfully updated to {status.value.lower()}."
+            )
+        

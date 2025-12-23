@@ -14,6 +14,7 @@ class GenericResponse(BaseModel):
     success: bool
     requested_at: datetime
     requested_by: str | None = None
+    description: str | None = None
 
     class Config: 
         from_attributes = True

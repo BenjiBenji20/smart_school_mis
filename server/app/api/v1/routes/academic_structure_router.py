@@ -122,3 +122,25 @@ async def register_term(
         terms=terms,
         requested_by=current_user.first_name + " " + current_user.last_name
     )
+
+
+@academic_structure_router.patch("/term/{id}/status/{status}", response_model=GenericResponse)
+async def manage_term_status(
+    id: str,
+    status: TermStatus,
+    db: AsyncSession = Depends(get_async_db),
+    current_user: Registrar = Depends(get_current_user),
+    allowed_roles = Depends(role_required([UserRole.REGISTRAR]))
+):
+    """
+        Manage term status allowed only for registrar role.
+        term has default DRAFT status when its first created.
+        registrar must manage it according to status needed.
+    """
+    service = AcademicStructureService(db)
+    return await service.manage_term_status(
+        id=id,
+        status=status,
+        requested_by=current_user.first_name + " " + current_user.last_name
+    )
+    
