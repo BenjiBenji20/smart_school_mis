@@ -5,7 +5,7 @@
 from datetime import datetime, timezone
 import uuid
 
-from sqlalchemy import Column, DateTime, ForeignKey, String, Enum
+from sqlalchemy import Column, DateTime, ForeignKey, String, Enum, UniqueConstraint
 from sqlalchemy.orm import relationship
 
 from app.db.base import Base
@@ -46,4 +46,8 @@ class CourseOffering(Base):
         back_populates="course_offerings",
         uselist=False
     )
+    
+    
+    # One CurriculumCourse can only be offered once per Term
+    UniqueConstraint("curriculum_course_id", "term_id")
     
