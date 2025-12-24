@@ -46,13 +46,4 @@ class Course(Base):
         lazy="dynamic"
     )
     
-    
-    # one-to-many relationship with CourseOffering
-    course_offerings = relationship(
-        "CourseOffering",
-        back_populates="course",
-        cascade="all, delete-orphan",
-        lazy="dynamic"
-    )
-    
     UniqueConstraint("course_code")

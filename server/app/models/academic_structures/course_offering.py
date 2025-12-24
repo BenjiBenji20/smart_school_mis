@@ -2,21 +2,26 @@
     Date written: 12/22/2025 at 12:29 PM
 """
 
+from datetime import datetime, timezone
 import uuid
 
-from sqlalchemy import Column, ForeignKey, String
+from sqlalchemy import Column, DateTime, ForeignKey, String, Enum
 from sqlalchemy.orm import relationship
 
 from app.db.base import Base
+from app.models.enums.academic_structure_state import CourseOfferingStatus
 
 
 class CourseOffering(Base):
     __tablename__ = "course_offering" 
 
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    curriculum_id = Column(String(36), ForeignKey("curriculum.id"), nullable=True)
-    term_id = Column(String(36), ForeignKey("term.id"), nullable=True)
-    course_id = Column(String(36), ForeignKey("course.id"), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
+    
+    status = Column(Enum(CourseOfferingStatus), default=CourseOfferingStatus.PENDING, nullable=False)
+    
+    term_id = Column(String(36), ForeignKey("term.id"), nullable=False)
+    curriculum_course_id = Column(String(36), ForeignKey("curriculum_course.id"), nullable=False)
     
     # one-to-many relationship with ClassSection
     class_sections = relationship(
@@ -24,14 +29,6 @@ class CourseOffering(Base):
         back_populates="course_offering",
         cascade="all, delete-orphan",
         lazy="dynamic"
-    )
-    
-    
-    # many-to-one relationship with Curriculum
-    curriculum = relationship(
-        "Curriculum",
-        back_populates="course_offerings",
-        uselist=False
     )
     
     
@@ -43,9 +40,9 @@ class CourseOffering(Base):
     )
     
     
-    # many-to-one relationship with Course
-    course = relationship(
-        "Course",
+    # many-to-one relationship with CurriculumCourse
+    curriculum_course = relationship(
+        "CurriculumCourse",
         back_populates="course_offerings",
         uselist=False
     )

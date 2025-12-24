@@ -15,9 +15,16 @@ class SemesterPeriod(str, Enum):
     FIRST = "FIRST"
     SECOND = "SECOND"
     SUMMER = "SUMMER"
+
     
 class TermStatus(str, Enum):
     DRAFT = "DRAFT"
     OPEN = "OPEN"
     CLOSED = "CLOSED"
     ARCHIVED = "ARCHIVED"
+
+
+class CourseOfferingStatus(str, Enum):
+    PENDING = "PENDING"
+    APPROVED = "APPROVED"
+    CANCELLED = "CANCELLED"

@@ -42,11 +42,3 @@ class Curriculum(Base):
         uselist=True
     ) 
     
-    
-    # one-to-many relationship with CourseOffering
-    course_offerings = relationship(
-        "CourseOffering",
-        back_populates="curriculum",
-        uselist=True
-    ) 
-    

@@ -25,22 +25,13 @@ class CurriculumCourse(Base):
     semester = Column(SmallInteger, nullable=False)
     is_required = Column(Boolean, default=True)
 
-    # course can appear only once in a curriculum
-    # and a curriculum can have multiple courses but they should be different
-    __table_args__ = (
-        UniqueConstraint(
-            "curriculum_id", "course_id",
-            name="uq_curriculum_course"
-        ),
-    )
-
     
     # many-to-one relationship with Curriculum
     curriculum = relationship(
         "Curriculum",
         back_populates="curriculum_courses",
         uselist=False
-    ) 
+    )
     
     
     # many-to-one relationship with Course
@@ -48,5 +39,23 @@ class CurriculumCourse(Base):
         "Course",
         back_populates="curriculum_courses",
         uselist=False
+    )
+    
+    
+    # one-to-many relationship with CourseOffering
+    course_offerings = relationship(
+        "CourseOffering",
+        back_populates="curriculum_course",
+        uselist=True
+    )
+    
+    
+    # course can appear only once in a curriculum
+    # and a curriculum can have multiple courses but they should be different
+    __table_args__ = (
+        UniqueConstraint(
+            "curriculum_id", "course_id",
+            name="uq_curriculum_course"
+        ),
     ) 
     
