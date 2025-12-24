@@ -17,8 +17,11 @@ from app.repository.academic_structure.curriculum_repository import CurriculumRe
 from app.repository.academic_structure.course_repository import CourseRepository
 from app.repository.academic_structure.curriculum_course_repository import CurriculumCourseRepository
 from app.repository.academic_structure.term_repository import TermRepository
+from app.repository.academic_structure.course_offering_repository import CourseOfferingRepository
 
 from app.models.academic_structures.term import Term
+from app.models.academic_structures.course_offering import CourseOffering
+from app.models.academic_structures.curriculum import Curriculum
 
 
 class AcademicStructureService:
@@ -27,10 +30,13 @@ class AcademicStructureService:
             - Register new department
             - Register new programs
             - Register new curriculum
+            - Update curriculum status
             - Register new courses
             - Register new curriculum courses
             - Register new terms
             - Update term's status
+            - Register course offering
+            - Update course offerings's status
     """
     def __init__(self, db: AsyncSession):
         self.db = db
@@ -41,6 +47,7 @@ class AcademicStructureService:
         self.course_repo = CourseRepository(db)
         self.curriculum_course_repo = CurriculumCourseRepository(db)
         self.term_repo = TermRepository(db)
+        self.course_offering_repo = CourseOfferingRepository(db)
         
         
     async def register_department(
@@ -164,7 +171,49 @@ class AcademicStructureService:
                 description=f"Register curriculum {register_curriculum.title}"
             )
         )
+    
+    
+    async def update_curriculum_status(
+        self,
+        id: str,
+        status: CurriculumStatus,
+        requested_by: str
+    ) -> GenericResponse:
+        """
+            Update curriculum status allowed only for registrar role.
+            curriculum has default DRAFT status when its first created.
+            registrar must manage it according to status needed.
+            
+            param: id: for the target curriculum to manage
+            param: status: the status to be switch by the curriculum
+        """
+        curriculum: Curriculum = await self.curriculum_repo.get_by_id(id)
         
+        if not curriculum:
+            raise ResourceNotFoundException(f"curriculum not found.")
+        
+        # invalidate update if current curriculum status is the same with request.
+        if status == curriculum.status:
+            return GenericResponse(
+                success=False,
+                requested_at=datetime.now(timezone.utc),
+                requested_by=requested_by,
+                description=f"Curriculum is already {status.value.lower()}. No actions happened."
+            )
+  
+        # update the curriculum's status
+        await self.curriculum_repo.update(
+            id=id,
+            status=status
+        )
+        
+        return GenericResponse(
+                success=True,
+                requested_at=datetime.now(timezone.utc),
+                requested_by=requested_by,
+                description=f"Curriculum status successfully updated to {status.value.lower()}."
+            )
+       
         
     async def register_course(
         self, 
@@ -437,3 +486,88 @@ class AcademicStructureService:
 
         return response
     
+    
+    async def register_course_offering(
+        self,
+        course_offering: CourseOfferingRequestSchema,
+        requested_by: str
+    ) -> CourseOfferingResponseSchema:
+        """
+            Register course_offering one at a time (Registrar only).
+            Registration must meet this conditions:
+                Curriculum.status = Active
+                Term.status = OPEN
+                
+                else invalidate the registration
+            
+            Status is PENDING at registration. 
+            Must be update by registrar or dean.
+        """
+        course_offering_dict = course_offering.model_dump()
+        
+        # register course offering
+        register_course_offering = await self.course_offering_repo.register_course_offering(
+            curriculum_course_id = course_offering_dict["curriculum_course_id"],
+            term_id = course_offering_dict["term_id"],
+            status = course_offering_dict["status"],
+        )
+        
+        if not register_course_offering:
+            raise InvalidRequestException("Registration of course offering failed.")
+        
+        return CourseOfferingResponseSchema(
+            id=register_course_offering.id,
+            created_at=register_course_offering.created_at,
+            curriculum_course_id=register_course_offering.curriculum_course_id,
+            term_id=register_course_offering.term_id,
+            status=register_course_offering.status,
+            request_log=GenericResponse(
+                success=True,
+                requested_at=datetime.now(timezone.utc),
+                requested_by=requested_by,
+                description=f"Register course offering with status {register_course_offering.status.lower()}"
+            )
+        )
+
+
+    async def update_course_offering_status(
+        self,
+        id: str,
+        status: CourseOfferingStatus,
+        requested_by: str
+    ) -> GenericResponse:
+        """
+            Manage course offering status allowed only for registrar and dean role.
+            Course offering has default PENDING status when its first registered.
+            registrar or dean must update it according to status needed.
+            
+            param: id: for the target course_offering db record to update
+            param: status: the status to be switch by the CourseOfferingStatus
+        """
+        course_offering: CourseOffering = await self.course_offering_repo.get_by_id(id)
+        
+        if not course_offering:
+            raise ResourceNotFoundException(f"course offering not found.")
+        
+        # invalidate update if current course offering status is the same with request.
+        if status == course_offering.status:
+            return GenericResponse(
+                success=False,
+                requested_at=datetime.now(timezone.utc),
+                requested_by=requested_by,
+                description=f"Course offering is already {status.value.lower()}. No actions happened."
+            )
+  
+        # update the course offering's status
+        await self.course_offering_repo.update(
+            id=id,
+            status=status
+        )
+        
+        return GenericResponse(
+                success=True,
+                requested_at=datetime.now(timezone.utc),
+                requested_by=requested_by,
+                description=f"Course offering status successfully updated to {status.value.lower()}."
+            )
+        

@@ -6,7 +6,7 @@ from datetime import datetime
 from pydantic import BaseModel, Field
 
 from app.schemas.generic_schema import GenericResponse
-from app.models.enums.academic_structure_state import CurriculumStatus, SemesterPeriod, TermStatus
+from app.models.enums.academic_structure_state import *
 
 # ==============================================
 # DEPARTMENT SCHEMAS
@@ -140,5 +140,24 @@ class TermResponseSchema(BaseModel):
 
     semester_period: SemesterPeriod
     status: TermStatus
+    
+    request_log: GenericResponse
+
+
+# ==============================================
+# CourseOffering SCHEMAS
+# ==============================================  
+class CourseOfferingRequestSchema(BaseModel):
+    term_id: str = Field(..., max_length=36)
+    curriculum_course_id: str = Field(..., max_length=36)
+    status: CourseOfferingStatus = CourseOfferingStatus.PENDING
+    
+    
+class CourseOfferingResponseSchema(BaseModel):
+    id: str
+    created_at: datetime
+    term_id: str
+    curriculum_course_id: str
+    status: CourseOfferingStatus
     
     request_log: GenericResponse

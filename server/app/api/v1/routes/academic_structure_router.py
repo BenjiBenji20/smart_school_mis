@@ -69,6 +69,27 @@ async def register_curriculum(
         curriculum=curriculum,
         requested_by=current_user.first_name + " " + current_user.last_name
     )
+    
+    
+@academic_structure_router.patch("/curriculum/{id}/status/{status}", response_model=GenericResponse)
+async def update_curriculum_status(
+    id: str,
+    status: CurriculumStatus,
+    db: AsyncSession = Depends(get_async_db),
+    current_user: Registrar = Depends(get_current_user),
+    allowed_roles = Depends(role_required([UserRole.REGISTRAR]))
+):
+    """
+        Update curriculum status allowed only for registrar role.
+        Curriculum has default DRAFT status when its first created.
+        registrar must update it according to status needed.
+    """
+    service = AcademicStructureService(db)
+    return await service.update_curriculum_status(
+        id=id,
+        status=status,
+        requested_by=current_user.first_name + " " + current_user.last_name
+    )
 
 
 @academic_structure_router.post("/register-course", response_model=List[RegisterCourseResponseSchema])
@@ -175,6 +196,49 @@ async def get_active_enrollment(
     """
     service = AcademicStructureService(db)
     return await service.get_active_enrollment(
+        requested_by=current_user.first_name + " " + current_user.last_name
+    )
+
+    
+@academic_structure_router.post("/register-course-offering", response_model=CourseOfferingResponseSchema)
+async def register_course_offering(
+    course_offering: CourseOfferingRequestSchema,
+    db: AsyncSession = Depends(get_async_db),
+    current_user: Registrar = Depends(get_current_user),
+    allowed_roles = Depends(role_required([UserRole.REGISTRAR]))
+):
+    """
+        Register course_offering one at a time (Registrar only).
+        Status is PENDING at registration. 
+        Must be update by registrar or dean.
+    """
+    service = AcademicStructureService(db)
+    return await service.register_course_offering(
+        course_offering=course_offering,
+        requested_by=current_user.first_name + " " + current_user.last_name
+    )
+
+
+@academic_structure_router.patch("/course-offering/{id}/status/{status}", response_model=GenericResponse)
+async def update_term_status(
+    id: str,
+    status: CourseOfferingStatus,
+    db: AsyncSession = Depends(get_async_db),
+    current_user: Registrar = Depends(get_current_user),
+    allowed_roles = Depends(role_required([UserRole.REGISTRAR]))
+):
+    """
+        Manage course offering status allowed only for registrar and dean role.
+        Course offering has default PENDING status when its first registered.
+        registrar or dean must update it according to status needed.
+        
+        param: id: for the target course_offering db record to update
+        param: status: the status to be switch by the CourseOfferingStatus
+    """
+    service = AcademicStructureService(db)
+    return await service.update_course_offering_status(
+        id=id,
+        status=status,
         requested_by=current_user.first_name + " " + current_user.last_name
     )
     
