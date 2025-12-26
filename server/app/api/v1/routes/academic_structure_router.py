@@ -225,7 +225,7 @@ async def update_term_status(
     status: CourseOfferingStatus,
     db: AsyncSession = Depends(get_async_db),
     current_user: Registrar = Depends(get_current_user),
-    allowed_roles = Depends(role_required([UserRole.REGISTRAR]))
+    allowed_roles = Depends(role_required([UserRole.REGISTRAR, UserRole.DEAN]))
 ):
     """
         Manage course offering status allowed only for registrar and dean role.
@@ -241,4 +241,44 @@ async def update_term_status(
         status=status,
         requested_by=current_user.first_name + " " + current_user.last_name
     )
-    
+
+
+@academic_structure_router.post("/register/class-section", response_model=List[ClassSectionResponseSchema])
+async def register_class_section(
+    class_sections: List[ClassSectionRequestSchema],
+    db: AsyncSession = Depends(get_async_db),
+    current_user: Registrar = Depends(get_current_user),
+    allowed_roles = Depends(role_required([UserRole.REGISTRAR, UserRole.DEAN, UserRole.PROGRAM_CHAIR]))
+):
+    """
+        Register one or multiple class section at the same time.
+    """
+    service = AcademicStructureService(db)
+    return await service.register_class_section(
+        class_sections=class_sections,
+        requested_by=current_user.first_name + " " + current_user.last_name
+    )
+
+
+@academic_structure_router.post(
+    "/assign/professor/class-section",
+    response_model=List[ProfessorClassSectionResponseSchema]
+)
+async def assign_class_section_professor(
+    request: ProfessorClassSectionRequestSchema,
+    db: AsyncSession = Depends(get_async_db),
+    current_user: Registrar = Depends(get_current_user),
+    allowed_roles = Depends(role_required([UserRole.REGISTRAR, UserRole.DEAN, UserRole.PROGRAM_CHAIR]))
+):
+    """
+        Register one professor to multiple class section at the same request
+        Assign professor to multiple class sections
+            - Professor must be ACTIVE
+            - No duplicate assignment (handled by UniqueConstraint)
+    """
+    service = AcademicStructureService(db)
+    return await service.assign_class_section_professor(
+        prof_id=request.prof_id,
+        class_section_ids=request.class_section_ids,
+        requested_by=current_user.first_name + " " + current_user.last_name
+    ) 

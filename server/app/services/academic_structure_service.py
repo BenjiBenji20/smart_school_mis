@@ -11,13 +11,15 @@ from app.schemas.academic_structure_schema import *
 from app.exceptions.customed_exception import *
 from app.schemas.generic_schema import GenericResponse
 
-from app.repository.academic_structure.department_repository import DepartmentRepository
-from app.repository.academic_structure.program_repository import ProgramRepository
-from app.repository.academic_structure.curriculum_repository import CurriculumRepository
-from app.repository.academic_structure.course_repository import CourseRepository
-from app.repository.academic_structure.curriculum_course_repository import CurriculumCourseRepository
-from app.repository.academic_structure.term_repository import TermRepository
-from app.repository.academic_structure.course_offering_repository import CourseOfferingRepository
+from app.repository.academic_structures.department_repository import DepartmentRepository
+from app.repository.academic_structures.program_repository import ProgramRepository
+from app.repository.academic_structures.curriculum_repository import CurriculumRepository
+from app.repository.academic_structures.course_repository import CourseRepository
+from app.repository.academic_structures.curriculum_course_repository import CurriculumCourseRepository
+from app.repository.academic_structures.term_repository import TermRepository
+from app.repository.academic_structures.course_offering_repository import CourseOfferingRepository
+from app.repository.academic_structures.class_section_repository import ClassSectionRepository
+from app.repository.academic_structures.professor_class_section_repository import ProfessorClassSectionRepository
 
 from app.models.academic_structures.term import Term
 from app.models.academic_structures.course_offering import CourseOffering
@@ -48,6 +50,8 @@ class AcademicStructureService:
         self.curriculum_course_repo = CurriculumCourseRepository(db)
         self.term_repo = TermRepository(db)
         self.course_offering_repo = CourseOfferingRepository(db)
+        self.class_section_repo = ClassSectionRepository(db)
+        self.prof_class_section_repo = ProfessorClassSectionRepository(db)
         
         
     async def register_department(
@@ -570,4 +574,136 @@ class AcademicStructureService:
                 requested_by=requested_by,
                 description=f"Course offering status successfully updated to {status.value.lower()}."
             )
+        
+        
+    async def register_class_section(
+        self,
+        class_sections: List[ClassSectionRequestSchema],
+        requested_by: str
+    ) -> List[ClassSectionResponseSchema]:
+        """
+            Register one or multiple class section at the same time.
+        """
+        payload: list[dict] = []
+
+        for class_section in class_sections:
+            data = class_section.model_dump()
+
+            if data.get("section_code"):
+                data["section_code"] = data["section_code"].upper()
+
+            payload.append(data)
+            
+        # register class sections all at once
+        registered_class_sections = await self.class_section_repo.create_many(payload)
+        
+        if registered_class_sections is None:
+            raise UnprocessibleContentException(
+                "Class section registration failed. Try again."
+            )
+        
+        response: List[ClassSectionResponseSchema] = []
+        
+        for class_section in registered_class_sections:
+            response.append(
+                ClassSectionResponseSchema(
+                    id=str(class_section.id),
+                    created_at=class_section.created_at,
+                    course_offering_id=class_section.course_offering_id,
+                    section_code=class_section.section_code,
+                    room_number=class_section.room_number,
+                    student_capacity=class_section.student_capacity,
+                    time_schedule=class_section.time_schedule,
+                    status=class_section.status,
+                    request_log=GenericResponse(
+                        success=True,
+                        requested_at=datetime.now(timezone.utc),
+                        requested_by=requested_by,
+                        description=f"Register class section {class_section.section_code}"
+                    )
+                )
+            )
+
+        return response
+        
+        
+    async def assign_class_section_professor(
+        self,
+        prof_id: str,
+        class_section_ids: List[str],
+        requested_by: str
+    ) -> List[ProfessorClassSectionResponseSchema]:
+        """
+            Register one professor to multiple class section at the same request
+            Assign professor to multiple class sections
+            - Professor must be ACTIVE
+            - No duplicate assignment (handled by UniqueConstraint)
+        """
+        # Validate that all class sections exist
+        for class_section_id in class_section_ids:
+            class_section = await self.class_section_repo.get_by_id(class_section_id)
+            if not class_section:
+                raise ResourceNotFoundException(
+                    f"Class section with id: {class_section_id} not found"
+                )
+            
+            if class_section.status != ClassSectionStatus.OPEN:
+                raise InvalidRequestException(
+                    f"Invalid professor assignment due to class section status {class_section.status.lower()}."
+                )
+        
+        # Create assignments in repository
+        assignments = await self.prof_class_section_repo.assign_professor_class_section(
+            prof_id=prof_id,
+            class_section_ids=class_section_ids
+        )
+        
+        if not assignments:
+            raise UnprocessibleContentException(
+                "Professor-class section assignment failed. Try again."
+            )
+        
+        # Get the created assignment IDs
+        assignment_ids = [str(assignment.id) for assignment in assignments]
+        
+        # Get detailed information for response
+        detailed_assignments = await self.prof_class_section_repo.get_professor_class_section_details(
+            assignment_ids
+        )
+        
+        # Build response
+        response: List[ProfessorClassSectionResponseSchema] = []
+        
+        for assignment in detailed_assignments:
+            response.append(
+                ProfessorClassSectionResponseSchema(
+                    id=assignment.id,
+                    created_at=assignment.created_at,
+                    course_offering_id=assignment.course_offering_id,
+                    
+                    professor_id=assignment.professor_id,
+                    professor_status=assignment.professor_status,
+                    first_name=assignment.first_name,
+                    middle_name=assignment.middle_name,
+                    last_name=assignment.last_name,
+                    suffix=assignment.suffix,
+                    university_code=assignment.university_code,
+                    
+                    class_section_id=assignment.class_section_id,
+                    section_code=assignment.section_code,
+                    room_number=assignment.room_number,
+                    student_capacity=assignment.student_capacity,
+                    time_schedule=assignment.time_schedule,
+                    class_section_status=assignment.class_section_status,
+                    
+                    request_log=GenericResponse(
+                        success=True,
+                        requested_at=datetime.now(timezone.utc),
+                        requested_by=requested_by,
+                        description=f"Assigned professor {assignment.university_code} to class section {assignment.section_code}"
+                    )
+                )
+            )
+        
+        return response
         

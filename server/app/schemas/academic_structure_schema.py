@@ -3,10 +3,12 @@
 """
 
 from datetime import datetime
+from typing import List
 from pydantic import BaseModel, Field
 
 from app.schemas.generic_schema import GenericResponse
 from app.models.enums.academic_structure_state import *
+from app.models.enums.user_state import ProfessorStatus
 
 # ==============================================
 # DEPARTMENT SCHEMAS
@@ -161,3 +163,59 @@ class CourseOfferingResponseSchema(BaseModel):
     status: CourseOfferingStatus
     
     request_log: GenericResponse
+    
+    
+# ==============================================
+# CLASSSECTION SCHEMAS
+# ==============================================  
+class ClassSectionRequestSchema(BaseModel):
+    course_offering_id: str = Field(..., max_length=36)
+    section_code: str = Field(..., max_length=10)
+    room_number: int | None = None
+    student_capacity: int = Field(gt=0) 
+    time_schedule: str | None = None
+    status: ClassSectionStatus = ClassSectionStatus.CLOSE
+    
+    
+class ClassSectionResponseSchema(BaseModel):
+    id: str
+    created_at: datetime
+    course_offering_id: str
+    section_code: str
+    room_number: int
+    student_capacity: int
+    time_schedule: str
+    status: ClassSectionStatus
+    
+    request_log: GenericResponse
+    
+    
+# ==============================================
+# CLASSSECTION_PROFESSOR SCHEMAS
+# ==============================================
+class ProfessorClassSectionRequestSchema(BaseModel):
+    prof_id: str
+    class_section_ids: List[str]
+
+class ProfessorClassSectionResponseSchema(BaseModel):
+    id: str
+    created_at: datetime
+    course_offering_id: str
+    
+    professor_id: str
+    professor_status: ProfessorStatus
+    first_name: str
+    middle_name: str | None = None
+    last_name: str
+    suffix: str | None = None
+    university_code: str
+    
+    class_section_id: str
+    section_code: str
+    room_number: int | None = None
+    student_capacity: int
+    time_schedule: str | None = None
+    class_section_status: ClassSectionStatus
+    
+    request_log: GenericResponse
+    
