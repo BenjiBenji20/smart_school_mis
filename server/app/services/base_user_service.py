@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.db_session import get_async_db
 from app.models.enums.user_state import UserRole
-from app.repository.user_registration_repository import UserRegistrationRepository
+from app.repository.auth_repository import AuthRepository
 from app.utils.approval_matrix import can_approve
 from app.exceptions.customed_exception import UnauthorizedAccessException
 from app.models.users.base_user import BaseUser
@@ -19,7 +19,7 @@ class BaseUserService:
     def __init__(self, db: AsyncSession = Depends(get_async_db)):
         self.db = db
         
-        self.user_registration_repo = UserRegistrationRepository(db)
+        self.auth_repo = AuthRepository(db)
         
         
     async def approve_user(
@@ -44,7 +44,7 @@ class BaseUserService:
             :return: to flag wheather the user is successfully approved
             :rtype: bool
         """
-        user = await self.user_registration_repo.get_by_id(id)
+        user = await self.auth_repo.get_by_id(id)
         role = user_role if user_role else user.role
         
         if not can_approve(approver_role, role):
@@ -52,7 +52,7 @@ class BaseUserService:
                 f"{approver_role.value} cannot approve {role}"
             )
         
-        await self.user_registration_repo.approve_pending_registration(
+        await self.auth_repo.approve_pending_registration(
             approved_by, role, id
         )
         
