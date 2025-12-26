@@ -67,6 +67,8 @@ from app.api.v1.routes.face_recognition_router import face_recognition_router
 from app.api.v1.routes.base_user_router import base_user_router
 from app.api.v1.routes.academic_structure_router import academic_structure_router
 from app.api.v1.routes.professor_router import prof_router
+from app.api.v1.routes.dean_router import dean_router
+from app.api.v1.routes.program_chair_router import program_chair_router
 
 
 # middlewares
@@ -109,6 +111,8 @@ app.include_router(face_recognition_router)
 app.include_router(base_user_router)
 app.include_router(academic_structure_router)
 app.include_router(prof_router)
+app.include_router(dean_router)
+app.include_router(program_chair_router)
 
 
 # regiustering global exeception handler
