@@ -19,6 +19,7 @@ from app.exceptions.customed_exception import *
 from app.models.users.base_user import BaseUser
 from app.repository.auth_repository import AuthRepository
 from app.models.enums.user_state import UserStatus
+from app.schemas.base_user_schema import BaseUserRequestSchema, BaseUserResponseSchema
 
 logger = logging.getLogger(__name__)
 
@@ -27,12 +28,63 @@ class AuthService:
         self.db = db
         self.auth_repo = AuthRepository(db=db)
 
-    """
-        hash password into cryptograph
-        validates plain password by comparing it to hashed password 
-        (hashed pass will be decoded first so it will be compare in full string type)
-    """
+    def hash_password(self, password: str) -> str:
+        pwd_context = CryptContext(
+            schemes=["bcrypt"],
+            deprecated="auto"
+        )
+        # normalize
+        password_bytes = password.encode("utf-8")
+        # pre-hash (fixed length)
+        sha256_hash = hashlib.sha256(password_bytes).hexdigest()
+        # bcrypt hash
+        return pwd_context.hash(sha256_hash)
+    
+    
+    async def user_registration_service(
+        self, 
+        user: BaseUserRequestSchema
+    ) -> Optional[BaseUserResponseSchema]:
+        """
+            Register any user model.
+        
+            :param user: Any user model
+            :type user: BaseUserRequestSchema
+            :return: Any user model
+            :rtype: BaseUserResponseSchema
+        """
+        try:
+            # validate if user exists by searching using its email
+            is_user_exists = await self.auth_repo.is_email_exists(user.email)
+            # if exists, invalidate the registration
+            if is_user_exists:
+                raise DuplicateEntryException(f"User with {user.email} as email already exists.")
+            
+            hashed_pw = self.hash_password(user.password)
+
+            user_dict = user.model_dump(exclude={"password"})  
+            user_dict["password_hash"] = hashed_pw
+            role = user_dict.pop("role")
+            new_user = await self.auth_repo.register_user_by_role(
+                role=role,
+                **user_dict
+            )
+
+            return new_user
+            
+        except DuplicateEntryException:
+            raise
+        except Exception as e:
+            logger.error(f"An error occured: {e}")
+            raise InternalServerError("An expected error occured.")
+
+    
     def validate_password(self, plain_password: str, hashed_password: str) -> bool:
+        """
+            hash password into cryptograph
+            validates plain password by comparing it to hashed password 
+            (hashed pass will be decoded first so it will be compare in full string type)
+        """
         pwd_context = CryptContext(
             schemes=["bcrypt"],
             deprecated="auto"
@@ -41,6 +93,7 @@ class AuthService:
         password_bytes = plain_password.encode("utf-8")
         sha256_hash = hashlib.sha256(password_bytes).hexdigest()
         return pwd_context.verify(sha256_hash, hashed_password)
+
 
     def validate_user_status(self, user_status: UserStatus) -> bool:
         return user_status.value == "Approved"
