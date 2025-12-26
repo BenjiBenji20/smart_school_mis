@@ -13,6 +13,7 @@ from app.models.users.base_user import BaseUser
 from app.exceptions.customed_exception import *
 from app.db.db_session import get_async_db
 from app.services.auth_service import AuthService
+from app.schemas.base_user_schema import BaseUserRequestSchema, BaseUserResponseSchema
 
 logger = logging.getLogger(__name__)
 
@@ -20,6 +21,31 @@ auth_router = APIRouter(
   prefix="/api/user",
   tags=["General user authentication router"]
 )
+
+logger = logging.getLogger(__name__)
+
+@auth_router.post("/registration", response_model=BaseUserResponseSchema)
+async def user_registration_router(user: BaseUserRequestSchema, db: AsyncSession = Depends(get_async_db)):
+    try:
+        registration_service = AuthService(db)
+        new_user: BaseUserResponseSchema = await registration_service.user_registration_service(user)
+        if not new_user:
+            raise UnprocessibleContentException("Value error")
+        
+        return new_user
+    except DuplicateEntryException as e:
+          logger.warning(f"Duplicate entry attempt: {e}")
+          raise
+    except UnprocessibleContentException as e:
+        logger.warning(f"Unprocessible content: {e}")
+        raise
+    except InternalServerError as e:
+        logger.error(f"Internal server error: {e}")
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error in registration: {e}", exc_info=True)
+        raise InternalServerError("An unexpected error occurred during registration")
+
 
 @auth_router.post("/authenticate/token", response_model=TokenResponseSchema)
 async def auth_token_router(
