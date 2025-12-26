@@ -3,15 +3,17 @@
 """
 
 from sqlalchemy.orm import relationship
-from sqlalchemy import Column, ForeignKey, String
+from sqlalchemy import Column, Enum, ForeignKey, String
 from app.models.users.base_user import BaseUser
-from app.models.enums.user_state import UserRole
+from app.models.enums.user_state import ProgramChairStatus, UserRole
 
 
 class ProgramChair(BaseUser):
     __tablename__ = "program_chair"
     
     id = Column(String(36), ForeignKey("base_user.id"), primary_key=True)
+    
+    program_chair_status = Column(Enum(ProgramChairStatus), default=ProgramChairStatus.ACTIVE, nullable=False)
     
     # foreign keys
     program_id = Column(String(36), ForeignKey("program.id"), nullable=True)

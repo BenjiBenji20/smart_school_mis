@@ -30,3 +30,17 @@ class ProfessorStatus(str, Enum):
     SUSPENDED = "SUSPENDED"
     ON_LEAVE = "ON_LEAVE"
     
+        
+class DeanStatus(str, Enum):
+    ACTIVE = "ACTIVE"
+    NOT_ACTIVE = "NOT_ACTIVE"
+    SUSPENDED = "SUSPENDED"
+    ON_LEAVE = "ON_LEAVE"
+    
+    
+class ProgramChairStatus(str, Enum):
+    ACTIVE = "ACTIVE"
+    NOT_ACTIVE = "NOT_ACTIVE"
+    SUSPENDED = "SUSPENDED"
+    ON_LEAVE = "ON_LEAVE"
+    

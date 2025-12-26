@@ -2,15 +2,18 @@
     Date written: 12/7/2025 at 2:49 PM
 """
  
-from sqlalchemy import Column, ForeignKey, String
+from sqlalchemy import Column, Enum, ForeignKey, String
 from sqlalchemy.orm import relationship
 from app.models.users.base_user import BaseUser
-from app.models.enums.user_state import UserRole
+from app.models.enums.user_state import DeanStatus, UserRole
 
 class Dean(BaseUser):
     __tablename__ = "dean"
     
     id = Column(String(36), ForeignKey("base_user.id"), primary_key=True)
+    dean_status = Column(Enum(DeanStatus), default=DeanStatus.ACTIVE, nullable=False)
+    
+    # foreign keys
     department_id = Column(String(36), ForeignKey("department.id"), nullable=True)
     
     # one-to-one with Department relationship
