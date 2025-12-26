@@ -23,3 +23,10 @@ class UserGender(str, Enum):
     MALE = "Male"
     FEMALE = "Female"
     
+    
+class ProfessorStatus(str, Enum):
+    ACTIVE = "ACTIVE"
+    NOT_ACTIVE = "NOT_ACTIVE"
+    SUSPENDED = "SUSPENDED"
+    ON_LEAVE = "ON_LEAVE"
+    

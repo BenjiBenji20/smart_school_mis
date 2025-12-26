@@ -3,33 +3,41 @@
 """
 
 from sqlalchemy.orm import relationship
-from sqlalchemy import Column, ForeignKey, String
+from sqlalchemy import Column, Enum, ForeignKey, String
 from app.models.users.base_user import BaseUser
-from app.models.academic_structures.professor_class_section import professor_class_section
-from app.models.enums.user_state import UserRole
+from app.models.academic_structures.professor_class_section import ProfessorClassSection
+from app.models.enums.user_state import ProfessorStatus, UserRole
 
 class Professor(BaseUser):
     __tablename__ = "professor"
      
     id = Column(String(36), ForeignKey("base_user.id"), primary_key=True)
+    professor_status = Column(Enum(ProfessorStatus), default=ProfessorStatus.ACTIVE, nullable=False)
     
     # foreign keys
-    department_id = Column(String(36), ForeignKey("department.id"), nullable=False)
+    department_id = Column(String(36), ForeignKey("department.id"), nullable=True)
     
-    # many-to-one relationship with Department
-    department = relationship(
-        "Department",
-        back_populates="professors",
-        uselist=False
+    
+    class_section_links = relationship(
+        "ProfessorClassSection",
+        back_populates="professor",
+        cascade="all, delete-orphan"
     )
     
     
     # many-to-many relationship with ClassSection
     class_sections = relationship(
         "ClassSection",
-        secondary=professor_class_section, # association table
+        secondary="professor_class_section",
+        viewonly=True
+    )
+    
+    
+    # many-to-one relationship with Department
+    department = relationship(
+        "Department",
         back_populates="professors",
-        lazy="dynamic"
+        uselist=False
     )
      
     

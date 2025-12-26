@@ -28,3 +28,10 @@ class CourseOfferingStatus(str, Enum):
     PENDING = "PENDING"
     APPROVED = "APPROVED"
     CANCELLED = "CANCELLED"
+
+
+class ClassSectionStatus(str, Enum):
+    OPEN = "OPEN"
+    CLOSE = "CLOSE"
+    CANCELLED = "CANCELLED"
+    

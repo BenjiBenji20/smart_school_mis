@@ -49,5 +49,12 @@ class CourseOffering(Base):
     
     
     # One CurriculumCourse can only be offered once per Term
-    UniqueConstraint("curriculum_course_id", "term_id")
+    __table_args__ = (
+        UniqueConstraint(
+            "curriculum_course_id",
+            "term_id",
+            name="uq_course_offering_curriculum_course_term"
+        ),
+    )
+
     
