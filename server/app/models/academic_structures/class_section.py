@@ -19,18 +19,25 @@ class ClassSection(Base):
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False) 
     
     section_code = Column(String(10), nullable=False)
-    room_number = Column(SmallInteger, nullable=True) 
     student_capacity = Column(SmallInteger, nullable=False)
     time_schedule = Column(String(50), nullable=True)
     status = Column(Enum(ClassSectionStatus), default=ClassSectionStatus.CLOSE, nullable=False)
     
     # foreign keys
     course_offering_id = Column(String(36), ForeignKey("course_offering.id"), nullable=False)
+    room_id  = Column(String(36), ForeignKey("room.id"), nullable=True)
     
     
     # many-to-one relationship with CourseOffering
     course_offering = relationship(
         "CourseOffering",
+        back_populates="class_sections"
+    )
+    
+    
+    # many-to-one relationship with Room
+    room = relationship(
+        "Room",
         back_populates="class_sections"
     )
 

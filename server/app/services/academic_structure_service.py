@@ -134,7 +134,7 @@ class AcademicStructureService:
                     id=str(room.id),
                     created_at=room.created_at,
                     room_code=room.room_code,
-                    capacity=room.capacity,
+                    section_capacity=room.section_capacity,
                     building_id=room.building_id,
                     request_log=GenericResponse(
                         success=True,
@@ -713,11 +713,25 @@ class AcademicStructureService:
         requested_by: str
     ) -> List[ClassSectionResponseSchema]:
         """
-            Register one or multiple class section at the same time.
+            Register one or multiple class sections at the same time.
+            Only class sections with valid room_id (if provided) are created.
         """
+        # Collect unique room_ids
+        room_ids = {cs.room_id for cs in class_sections if cs.room_id}
+
+        # Fetch existing room IDs
+        valid_room_ids: set[str] = set()
+        if room_ids:
+            valid_room_ids = set(
+                await self.room_repo.get_existing_ids(room_ids)
+            )
+        
         payload: list[dict] = []
 
         for class_section in class_sections:
+            if class_section.room_id and class_section.room_id not in valid_room_ids:
+                continue # skip invalid room reference
+            
             data = class_section.model_dump()
 
             if data.get("section_code"):
@@ -742,7 +756,7 @@ class AcademicStructureService:
                     created_at=class_section.created_at,
                     course_offering_id=class_section.course_offering_id,
                     section_code=class_section.section_code,
-                    room_number=class_section.room_number,
+                    room_id=class_section.room_id,
                     student_capacity=class_section.student_capacity,
                     time_schedule=class_section.time_schedule,
                     status=class_section.status,
