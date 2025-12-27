@@ -3,6 +3,7 @@
 """
 
 from typing import Optional
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.repository.base_repository import BaseRepository
@@ -14,6 +15,7 @@ from app.repository.academic_structures.curriculum_repository import CurriculumR
 from app.repository.academic_structures.term_repository import TermRepository
 
 from app.exceptions.customed_exception import *
+from app.models.academic_structures.class_section import ClassSection
 
 
 class CourseOfferingRepository(BaseRepository[CourseOffering]):
@@ -77,4 +79,18 @@ class CourseOfferingRepository(BaseRepository[CourseOffering]):
         await self.db.commit()
         await self.db.refresh(instance)
         return instance
+    
+    
+    async def get_course_offering(self, class_section_id: str) -> Optional[CourseOffering]:
+        result = await self.db.execute(
+            select(CourseOffering)
+                .join(
+                    ClassSection, ClassSection.course_offering_id == CourseOffering.id
+                )
+                .where(
+                    ClassSection.id == class_section_id
+                )
+        )
+        course_offering = result.scalars().first()
+        return course_offering
         

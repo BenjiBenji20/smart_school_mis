@@ -869,6 +869,28 @@ class AcademicStructureService:
                     f"Professor {professor_id} has a schedule conflict from {sched.start_time} to {sched.end_time}"
                 )
     
+    async def validate_class_section_status(self, class_section_id: str):
+        class_section = await self.class_section_repo.get_by_id(class_section_id)
+        if class_section.status != ClassSectionStatus.OPEN:
+            raise InvalidRequestException(
+                f"Invalid request. Class section {class_section.status} currently not open."
+            )
+            
+    async def validate_course_offering_status(self, class_section_id: str):
+        course_offering = await self.course_offering_repo.get_course_offering(class_section_id)
+        if course_offering.status != CourseOfferingStatus.APPROVED:
+            raise InvalidRequestException(
+                f"Invalid request. Course offering {course_offering.status} currently not yet approved."
+            )
+        # validate term status
+        await self.validate_term_status(course_offering.term_id)
+            
+    async def validate_term_status(self, term_id: str):
+        term = await self.term_repo.get_by_id(term_id)
+        if term.status != TermStatus.OPEN:
+            raise InvalidRequestException(
+                f"Invalid request. Term {term.status} currently not open."
+            )
     
     async def assign_schedule_class_section(
         self,
@@ -882,6 +904,9 @@ class AcademicStructureService:
                     (start < other_end) AND (end > other_start)
                 - Validate room conflict
                 - Validate professor conflict
+                - ClassSection.status != CLOSED
+                - CourseOffering.status == APPROVED
+                - Term.status == OPEN
                 - Persist schedule
         """
         # Validate time logic
@@ -903,6 +928,15 @@ class AcademicStructureService:
             class_schedule.end_time
         )
         
+        # Validate class section status
+        await self.validate_class_section_status(
+            class_schedule.class_section_id
+        )
+        
+        # Validate course offering and term status
+        await self.validate_course_offering_status(
+            class_schedule.class_section_id
+        )
         
         # Persist schedule
         new_schedule = await self.class_schedule_repo.create(
