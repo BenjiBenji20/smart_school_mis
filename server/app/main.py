@@ -32,6 +32,12 @@ from app.models.academic_structures.course_offering import CourseOffering
 from app.models.academic_structures.curriculum import Curriculum
 from app.models.academic_structures.curriculum_course import CurriculumCourse
 from app.models.academic_structures.term import Term
+from app.models.academic_structures.class_schedule import ClassSchedule
+
+
+# models - Location
+from app.models.locations.building import Building
+from app.models.locations.room import Room
 
 
 # models - Announcements

@@ -11,6 +11,8 @@ from app.schemas.academic_structure_schema import *
 from app.exceptions.customed_exception import *
 from app.schemas.generic_schema import GenericResponse
 
+from app.repository.locations.building_repository import BuildingRepository
+from app.repository.locations.room_repository import RoomRepository
 from app.repository.academic_structures.department_repository import DepartmentRepository
 from app.repository.academic_structures.program_repository import ProgramRepository
 from app.repository.academic_structures.curriculum_repository import CurriculumRepository
@@ -24,12 +26,16 @@ from app.repository.academic_structures.professor_class_section_repository impor
 from app.models.academic_structures.term import Term
 from app.models.academic_structures.course_offering import CourseOffering
 from app.models.academic_structures.curriculum import Curriculum
+from app.models.academic_structures.department import Department
 
 
 class AcademicStructureService:
     """
         Services exclusive only to registrar role.
+            - Register new building
+            - Register new rooms
             - Register new department
+            - Assign department building
             - Register new programs
             - Register new curriculum
             - Update curriculum status
@@ -39,10 +45,14 @@ class AcademicStructureService:
             - Update term's status
             - Register course offering
             - Update course offerings's status
+            - Register class section
+            - Assign class section professor
     """
     def __init__(self, db: AsyncSession):
         self.db = db
         
+        self.building_repo = BuildingRepository(db)
+        self.room_repo = RoomRepository(db)
         self.department_repo = DepartmentRepository(db)
         self.program_repo = ProgramRepository(db)
         self.curriculum_repo = CurriculumRepository(db)
@@ -52,6 +62,90 @@ class AcademicStructureService:
         self.course_offering_repo = CourseOfferingRepository(db)
         self.class_section_repo = ClassSectionRepository(db)
         self.prof_class_section_repo = ProfessorClassSectionRepository(db)
+        
+        
+    async def register_building(
+        self,
+        building: RegisterBuildingRequestSchema,
+        requested_by: str
+    ) -> RegisterBuildingResponseSchema:
+        """
+            Register building
+            param building: 
+                name: str (building name)
+                capacity: int (number of rooms)
+        """
+        building_dict = building.model_dump()
+        
+        # register building
+        register_building = await self.building_repo.create(
+            name=building_dict["name"],
+            room_capacity=building_dict["room_capacity"]
+        )
+        
+        return RegisterBuildingResponseSchema(
+            id=register_building.id,
+            created_at=register_building.created_at,
+            name=register_building.name,
+            room_capacity=register_building.room_capacity,
+            request_log=GenericResponse(
+                success=True,
+                requested_at=datetime.now(timezone.utc),
+                requested_by=requested_by,
+                description=f"Register building {register_building.name}"
+            )
+        )
+        
+        
+    async def register_room(
+        self,
+        rooms: List[RegisterRoomRequestSchema],
+        requested_by: str = None
+    ) -> List[RegisterRoomResponseSchema]:
+        """
+            Register room (administrator role)
+            param room: 
+                room_code: str (room name)
+                capacity: int (number of students)
+        """
+        payload: list[dict] = []
+
+        for room in rooms:
+            data = room.model_dump()
+
+            if data.get("room_code"):
+                data["room_code"] = data["room_code"].upper()
+
+            payload.append(data)
+            
+        # register rooms all at once
+        registered_rooms = await self.room_repo.create_many(payload)
+        
+        if registered_rooms is None:
+            raise UnprocessibleContentException(
+                "Room registration failed. Try again."
+            )
+        
+        response: List[RegisterRoomResponseSchema] = []
+        
+        for room in registered_rooms:
+            response.append(
+                RegisterRoomResponseSchema(
+                    id=str(room.id),
+                    created_at=room.created_at,
+                    room_code=room.room_code,
+                    capacity=room.capacity,
+                    building_id=room.building_id,
+                    request_log=GenericResponse(
+                        success=True,
+                        requested_at=datetime.now(timezone.utc),
+                        requested_by=requested_by,
+                        description=f"Register room {room.room_code}"
+                    )
+                )
+            )
+
+        return response
         
         
     async def register_department(
@@ -87,6 +181,43 @@ class AcademicStructureService:
                 description=f"Register department {register_department.title}"
             )
         )
+        
+        
+    async def assign_department_building(
+        self,
+        department_id: str,
+        building_id: str,
+        requested_by: str = None
+    ) -> GenericResponse:
+        """
+            Register department to building (administrator role)
+
+            Department <-> Building
+            - Department must not have been registered to other building
+        """
+        # find the department and validate if it was assigned to some building
+        department: Department = await self.department_repo.get_by_id(department_id)
+        
+        if not department:
+            raise InvalidRequestException(f"Assignation of department failed.")
+        
+        # find the building if exist
+        building = await self.building_repo.get_by_id(building_id)
+        if not building:
+            raise ResourceNotFoundException(f"Building not found using id: {building_id}.")
+        
+        # assign a building to the department
+        await self.department_repo.update(
+            id=department_id,
+            building_id=building_id
+        )
+        
+        return GenericResponse(
+                success=True,
+                requested_at=datetime.now(timezone.utc),
+                requested_by=requested_by,
+                description=f"Department successfully assigned to building {building.name}."
+            )
         
         
     async def register_program(

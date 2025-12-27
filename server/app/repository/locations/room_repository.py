@@ -1,14 +1,15 @@
 """
-    Date Written: 12/23/2025 at 11:13 AM
+    Date Written: 12/26/2025 at 9:15 PM
 """
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.repository.base_repository import BaseRepository
-from app.models.academic_structures.department import Department
+from app.models.locations.room import Room
 from app.exceptions.customed_exception import *
 
 
-class DepartmentRepository(BaseRepository[Department]):
+class RoomRepository(BaseRepository[Room]):
     def __init__(self, db: AsyncSession) -> None:
-        super().__init__(Department, db)
+        super().__init__(Room, db)
+    

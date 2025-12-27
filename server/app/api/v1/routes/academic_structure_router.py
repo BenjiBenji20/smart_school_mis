@@ -1,6 +1,7 @@
 """
     Date Written: 12/22/2025 at 4:32 PM
 """
+
 from typing import List
 from fastapi import APIRouter, Depends
 
@@ -17,8 +18,49 @@ from app.services.academic_structure_service import AcademicStructureService
 
 academic_structure_router = APIRouter(
     prefix="/api/academic-structure",
-    tags=["Only registrar and dean role are allowed for these APIs"]
+    tags=["API's for interacting with academic structure"]
 )
+
+@academic_structure_router.post("/register-building", response_model=RegisterBuildingResponseSchema)
+async def register_building(
+    building: RegisterBuildingRequestSchema,
+    db: AsyncSession = Depends(get_async_db),
+    current_user: Registrar = Depends(get_current_user),
+    allowed_roles = Depends(role_required([UserRole.ADMINISTRATOR]))
+):
+    """
+        Register building (administrator role)
+        param building: 
+            name: str (building name)
+            room_capacity: int (number of rooms)
+    """
+    service = AcademicStructureService(db)
+    return await service.register_building(
+        building=building,
+        requested_by=current_user.first_name + " " + current_user.last_name
+    )
+    
+    
+@academic_structure_router.post("/register-room", response_model=List[RegisterRoomResponseSchema])
+async def register_room(
+    rooms: List[RegisterRoomRequestSchema],
+    db: AsyncSession = Depends(get_async_db),
+    current_user: Registrar = Depends(get_current_user),
+    allowed_roles = Depends(role_required([UserRole.ADMINISTRATOR]))
+):
+    """
+        Register room (administrator role)
+        param room: 
+            room_code: str (room name)
+            capacity: int (number of students)
+    """
+    service = AcademicStructureService(db)
+    return await service.register_room(
+        rooms=rooms,
+        requested_by=current_user.first_name + " " + current_user.last_name
+    )
+
+
 
 @academic_structure_router.post("/register-department", response_model=RegisterDepartmentResponseSchema)
 async def register_department(
@@ -33,6 +75,31 @@ async def register_department(
     service = AcademicStructureService(db)
     return await service.register_department(
         department=department,
+        requested_by=current_user.first_name + " " + current_user.last_name
+    )
+    
+    
+@academic_structure_router.patch(
+    "/department/{department_id}/building/{building_id}", 
+    response_model=GenericResponse
+)
+async def register_department_building(
+    department_id: str,
+    building_id: str,
+    db: AsyncSession = Depends(get_async_db),
+    current_user: Registrar = Depends(get_current_user),
+    allowed_roles = Depends(role_required([UserRole.ADMINISTRATOR]))
+):
+    """
+        Register department to building (administrator role)
+
+        Building <-> Department
+        - Department must not have been registered to other building
+    """
+    service = AcademicStructureService(db)
+    return await service.assign_department_building(
+        department_id=department_id,
+        building_id=building_id,
         requested_by=current_user.first_name + " " + current_user.last_name
     )
     

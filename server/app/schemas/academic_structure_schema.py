@@ -11,6 +11,44 @@ from app.models.enums.academic_structure_state import *
 from app.models.enums.user_state import ProfessorStatus
 
 # ==============================================
+# BUILDING SCHEMAS
+# ==============================================
+class RegisterBuildingRequestSchema(BaseModel):
+    name: str = Field(..., max_length=100)
+    room_capacity: int
+    
+
+class RegisterBuildingResponseSchema(BaseModel):
+    id: str
+    created_at: datetime
+    name: str
+    room_capacity: int
+    
+    request_log: GenericResponse
+    
+    
+# ==============================================
+# BUILDING SCHEMAS
+# ==============================================
+class RegisterRoomRequestSchema(BaseModel):
+    room_code: str | None = Field(default=None, max_length=10)
+    capacity: int # student capacity
+
+    # foreign keys
+    building_id: str = Field(..., max_length=36)
+    
+
+class RegisterRoomResponseSchema(BaseModel):
+    id: str
+    created_at: datetime
+    building_id: str
+    room_code: str
+    capacity: int
+    
+    request_log: GenericResponse
+
+
+# ==============================================
 # DEPARTMENT SCHEMAS
 # ==============================================
 class RegisterDepartmentRequestSchema(BaseModel):
