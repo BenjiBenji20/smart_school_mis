@@ -19,6 +19,16 @@ class Department(Base):
     department_code = Column(String(10), unique=True, nullable=True)
     description = Column(String(255), nullable=True)
     
+    # foreign key
+    building_id = Column(ForeignKey("building.id"), nullable=True)
+    
+    # many-to-one relationship with Building
+    building = relationship(
+        "Building",
+        back_populates="departments",
+        uselist=False
+    )
+    
     # one-to-one relationship with Dean 
     dean = relationship(
         "Dean",

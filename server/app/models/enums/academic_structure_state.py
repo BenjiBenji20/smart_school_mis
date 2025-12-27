@@ -4,6 +4,11 @@
 
 from enum import Enum
 
+# class DepartmentSelection(str, Enum):
+#     CCS = "College of Computer Studies"
+#     CBA = "College of Business Accountancy"
+#     CRIM = "Criminology na may Motor Lang"
+
 
 class CurriculumStatus(str, Enum):
     DRAFT = "Draft"
@@ -35,3 +40,9 @@ class ClassSectionStatus(str, Enum):
     CLOSE = "CLOSE"
     CANCELLED = "CANCELLED"
     
+    
+class EnrollmentStatus(str, Enum):
+    PENDING = "PENDING"
+    VALIDATED = "VALIDATED"
+    APPROVED = "APPROVED"
+    CANCELLED = "CANCELLED"

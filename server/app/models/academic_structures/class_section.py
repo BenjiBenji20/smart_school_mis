@@ -77,6 +77,15 @@ class ClassSection(Base):
     )
     
     
+    # one-to-many relationship with ClassSchedule
+    class_schedules = relationship(
+        "ClassSchedule",
+        back_populates="class_section",
+        cascade="all, delete-orphan",
+        lazy="dynamic"
+    )
+    
+    
     # one section code can only be there per course offering
     __table_args__ = (
         UniqueConstraint(
