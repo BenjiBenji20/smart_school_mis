@@ -22,11 +22,13 @@ from app.repository.academic_structures.term_repository import TermRepository
 from app.repository.academic_structures.course_offering_repository import CourseOfferingRepository
 from app.repository.academic_structures.class_section_repository import ClassSectionRepository
 from app.repository.academic_structures.professor_class_section_repository import ProfessorClassSectionRepository
+from app.repository.academic_structures.class_schedule_repository import ClassScheduleRepository
 
 from app.models.academic_structures.term import Term
 from app.models.academic_structures.course_offering import CourseOffering
 from app.models.academic_structures.curriculum import Curriculum
 from app.models.academic_structures.department import Department
+from app.models.academic_structures.class_schedule import ClassSchedule
 
 
 class AcademicStructureService:
@@ -47,6 +49,7 @@ class AcademicStructureService:
             - Update course offerings's status
             - Register class section
             - Assign class section professor
+            - Assign a schedule to class section
     """
     def __init__(self, db: AsyncSession):
         self.db = db
@@ -62,6 +65,7 @@ class AcademicStructureService:
         self.course_offering_repo = CourseOfferingRepository(db)
         self.class_section_repo = ClassSectionRepository(db)
         self.prof_class_section_repo = ProfessorClassSectionRepository(db)
+        self.class_schedule_repo = ClassScheduleRepository(db)
         
         
     async def register_building(
@@ -836,3 +840,95 @@ class AcademicStructureService:
         
         return response
         
+    
+    # -------------------------------
+    # CLASS SCHEDULING VALIDATION METHODS
+    # -------------------------------
+    async def validate_time_logic(self, start_time: time, end_time: time):
+        #Validate time logic (start < end) (start < other_end) AND (end > other_start)
+        if start_time >= end_time:
+            raise InvalidRequestException("Start time must be before end time")
+    
+    async def validate_room_conflict(self, room_id: str, day_of_week: int, start_time: time, end_time: time):
+        # Check if any existing schedule in this room overlaps with requested time
+        existing_schedules: List[ClassSchedule] = await self.class_schedule_repo.get_schedules_by_room(room_id, day_of_week)
+        for sched in existing_schedules:
+            if (start_time < sched.end_time) and (end_time > sched.start_time):
+                raise InvalidRequestException(f"Room {room_id} is already booked from {sched.start_time} to {sched.end_time}")
+    
+    async def validate_professor_conflict(self, class_section_id: str, day_of_week: int, start_time: time, end_time: time):
+        # Get professor assigned to this class section
+        professor_id = await self.prof_class_section_repo.get_professor_id(class_section_id)
+        if not professor_id:
+            raise ResourceNotFoundException("No professor assigned to class section")
+        
+        existing_schedules: List[ClassSchedule] = await self.class_schedule_repo.get_schedules_by_professor(professor_id, day_of_week)
+        for sched in existing_schedules:
+            if (start_time < sched.end_time) and (end_time > sched.start_time):
+                raise InvalidRequestException(
+                    f"Professor {professor_id} has a schedule conflict from {sched.start_time} to {sched.end_time}"
+                )
+    
+    
+    async def assign_schedule_class_section(
+        self,
+        class_schedule: ClassScheduleRequestSchema,
+        requested_by: str = None
+    ) -> ClassScheduleResponseSchema:
+        """
+            Assign a schedule to class section.
+            Following these validation and constraints:
+                - Validate time logic (start < end)
+                    (start < other_end) AND (end > other_start)
+                - Validate room conflict
+                - Validate professor conflict
+                - Persist schedule
+        """
+        # Validate time logic
+        await self.validate_time_logic(class_schedule.start_time, class_schedule.end_time)
+        
+        # Validate room conflicts
+        await self.validate_room_conflict(
+            class_schedule.room_id,
+            class_schedule.day_of_week,
+            class_schedule.start_time,
+            class_schedule.end_time
+        )
+        
+        # Validate professor conflicts
+        await self.validate_professor_conflict(
+            class_schedule.class_section_id,
+            class_schedule.day_of_week,
+            class_schedule.start_time,
+            class_schedule.end_time
+        )
+        
+        
+        # Persist schedule
+        new_schedule = await self.class_schedule_repo.create(
+            class_section_id=class_schedule.class_section_id,
+            room_id=class_schedule.room_id,
+            day_of_week=class_schedule.day_of_week,
+            start_time=class_schedule.start_time,
+            end_time=class_schedule.end_time
+        )
+        
+        # Build response
+        response = ClassScheduleResponseSchema(
+            id=new_schedule.id,
+            created_at=new_schedule.created_at,
+            class_section_id=new_schedule.class_section_id,
+            room_id=new_schedule.room_id,
+            day_of_week=new_schedule.day_of_week,
+            start_time=new_schedule.start_time,
+            end_time=new_schedule.end_time,
+            request_log=GenericResponse(
+                success=True,
+                requested_at=datetime.now(timezone.utc),
+                requested_by=requested_by,
+                description="Schedule assigned successfully"
+            )
+        )
+        
+        return response
+    

@@ -349,3 +349,28 @@ async def assign_class_section_professor(
         class_section_ids=request.class_section_ids,
         requested_by=current_user.first_name + " " + current_user.last_name
     ) 
+
+
+@academic_structure_router.post(
+    "/assign/schedule/class-section",
+    response_model=ClassScheduleResponseSchema
+)
+async def assign_schedule_class_section(
+    class_schedule: ClassScheduleRequestSchema,
+    db: AsyncSession = Depends(get_async_db),
+    current_user: Registrar = Depends(get_current_user),
+    allowed_roles = Depends(role_required([UserRole.REGISTRAR, UserRole.DEAN, UserRole.PROGRAM_CHAIR]))
+):
+    """
+        Assign a schedule to class section.
+        Following these validation and constraints:
+            - Validate time logic (start < end)
+            - Validate room conflict
+            - Validate professor conflict
+            - Persist schedule
+    """
+    service = AcademicStructureService(db)
+    return await service.assign_schedule_class_section(
+        class_schedule=class_schedule,
+        requested_by=current_user.first_name + " " + current_user.last_name
+    )

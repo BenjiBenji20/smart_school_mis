@@ -2,9 +2,9 @@
     Date Written: 12/22/2025 at 4:36 PM
 """
 
-from datetime import datetime
+from datetime import datetime, time
 from typing import List
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from app.schemas.generic_schema import GenericResponse
 from app.models.enums.academic_structure_state import *
@@ -228,7 +228,7 @@ class ClassSectionResponseSchema(BaseModel):
 # CLASSSECTION_PROFESSOR SCHEMAS
 # ==============================================
 class ProfessorClassSectionRequestSchema(BaseModel):
-    prof_id: str
+    prof_id: str = Field(..., max_length=36)
     class_section_ids: List[str]
 
 class ProfessorClassSectionResponseSchema(BaseModel):
@@ -253,3 +253,33 @@ class ProfessorClassSectionResponseSchema(BaseModel):
     
     request_log: GenericResponse
     
+    
+# ==============================================
+# CLASSSCHEDULE SCHEMAS
+# ==============================================    
+class ClassScheduleRequestSchema(BaseModel):
+    class_section_id: str = Field(..., max_length=36)
+    room_id: str = Field(..., max_length=36)
+    day_of_week: int  # 1=Mon, 7=Sun
+    # day of week must not less than 1 (monday) or greater than 7 (sunday)
+    @field_validator("day_of_week")
+    @classmethod
+    def validate_day_of_week(key, value):
+        if value > 7 or value < 1:
+            raise ValueError(f"Invalid day schedule: {value}")
+        return value
+    
+    start_time: time
+    end_time: time
+
+class ClassScheduleResponseSchema(BaseModel):
+    id: str
+    created_at: datetime
+    
+    class_section_id: str
+    room_id: str
+    day_of_week: int 
+    start_time: time
+    end_time: time
+    
+    request_log: GenericResponse

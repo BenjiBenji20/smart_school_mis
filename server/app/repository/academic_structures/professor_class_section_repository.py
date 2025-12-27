@@ -153,3 +153,14 @@ class ProfessorClassSectionRepository(BaseRepository[ProfessorClassSection]):
         
         return new_class_section_ids
     
+    
+    async def get_professor_id(self, class_section_id: str) -> str | None:
+        result = await self.db.execute(
+            select(ProfessorClassSection).where(
+                ProfessorClassSection.class_section_id == class_section_id
+            )
+        )
+        
+        link = result.scalars().first()
+        return link.professor_id
+        
