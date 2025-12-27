@@ -17,7 +17,6 @@ class Room(Base):
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False) 
     
     room_code = Column(String(10), unique=True, nullable=True)
-    section_capacity = Column(SmallInteger, nullable=False) # section capacity MAX 10
 
     # foreign keys
     building_id = Column(ForeignKey("building.id"), nullable=False)
@@ -33,15 +32,6 @@ class Room(Base):
     # one-to-many relationship with ClassSchedule
     class_schedules = relationship(
         "ClassSchedule",
-        back_populates = "room",
-        cascade="all, delete-orphan",
-        lazy="dynamic"
-    )
-    
-    
-    # one-to-many relationship with ClassSection
-    class_sections = relationship(
-        "ClassSection",
         back_populates = "room",
         cascade="all, delete-orphan",
         lazy="dynamic"

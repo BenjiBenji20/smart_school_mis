@@ -208,10 +208,8 @@ class CourseOfferingResponseSchema(BaseModel):
 # ==============================================  
 class ClassSectionRequestSchema(BaseModel):
     course_offering_id: str = Field(..., max_length=36)
-    room_id: str | None = Field(default=None, max_length=36)
     section_code: str = Field(..., max_length=10)
     student_capacity: int = Field(gt=0) 
-    time_schedule: str | None = None
     status: ClassSectionStatus = ClassSectionStatus.CLOSE
     
     
@@ -219,10 +217,8 @@ class ClassSectionResponseSchema(BaseModel):
     id: str
     created_at: datetime
     course_offering_id: str
-    room_id: str | None = None
     section_code: str
     student_capacity: int
-    time_schedule: str | None = None
     status: ClassSectionStatus
     
     request_log: GenericResponse
