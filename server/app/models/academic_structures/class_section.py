@@ -8,7 +8,6 @@ from sqlalchemy import Column, DateTime, Enum, ForeignKey, SmallInteger, String,
 from app.db.base import Base
 from sqlalchemy.orm import relationship
 
-from app.models.academic_structures.professor_class_section import ProfessorClassSection
 from app.models.enums.academic_structure_state import ClassSectionStatus
 
 
@@ -20,6 +19,7 @@ class ClassSection(Base):
     
     section_code = Column(String(10), nullable=False)
     student_capacity = Column(SmallInteger, nullable=False)
+    current_student_cnt = Column(SmallInteger, default=0, nullable=False)
     status = Column(Enum(ClassSectionStatus), default=ClassSectionStatus.CLOSE, nullable=False)
     
     # foreign keys

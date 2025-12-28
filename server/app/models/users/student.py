@@ -3,7 +3,8 @@
 """
 
 from sqlalchemy.orm import relationship
-from sqlalchemy import Boolean, Column, Date, ForeignKey, Integer, String
+from sqlalchemy import Column, Date, ForeignKey, SmallInteger, String
+
 from app.models.users.base_user import BaseUser
 from app.models.enums.user_state import UserRole
 
@@ -11,19 +12,12 @@ class Student(BaseUser):
     __tablename__ = "student"
     
     id = Column(String(36), ForeignKey("base_user.id"), primary_key=True)
-    
     # foreign keys
     program_id = Column(String(36), ForeignKey("program.id"), nullable=True)
 
     last_school_attended = Column(String(255), nullable=True)
-    
-    # Auto generated value with format (YYMMApplicationNumber)
-    # once the registrar accepted the account registration.
-    student_number = Column(Integer, nullable=True)
-    is_official_alumni = Column(Boolean, nullable=True)
-
-    enrolled_date = Column(Date, nullable=True)
-    year_level = Column(Integer, nullable=True)
+    program_enrolled_date = Column(Date, nullable=True)
+    year_level = Column(SmallInteger, default=1, nullable=False) # default (1) first year when first approved
      
     # many-to-one relationship with Program
     program = relationship(

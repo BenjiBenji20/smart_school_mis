@@ -2,16 +2,26 @@
     Date written: 12/10/2025 at 8:49 PM
 """
 
+from datetime import datetime, timezone
 import uuid
-from sqlalchemy import Column, ForeignKey, String, UniqueConstraint
+from sqlalchemy import Column, DateTime, Enum, ForeignKey, String, UniqueConstraint
 from sqlalchemy.orm import relationship
 from app.db.base import Base
+from app.models.enums.enrollment_and_grading_state import EnrollmentStatus
 
 
 class Enrollment(Base):
     __tablename__ = "enrollment"
     
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
+    
+    status = Column(
+        Enum(EnrollmentStatus, name="enrollment_status", create_type=False),
+        default=EnrollmentStatus.PENDING,
+        nullable=False,
+        name="status"
+    )
 
     # foreign keys
     student_id = Column(String(36), ForeignKey("student.id"), nullable=False)

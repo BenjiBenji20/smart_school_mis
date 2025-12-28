@@ -40,9 +40,3 @@ class ClassSectionStatus(str, Enum):
     CLOSE = "CLOSE"
     CANCELLED = "CANCELLED"
     
-    
-class EnrollmentStatus(str, Enum):
-    PENDING = "PENDING"
-    VALIDATED = "VALIDATED"
-    APPROVED = "APPROVED"
-    CANCELLED = "CANCELLED"
