@@ -718,11 +718,22 @@ class AcademicStructureService:
     ) -> List[ClassSectionResponseSchema]:
         """
             Register one or multiple class sections at the same time.
+                - validate course_offering.status must be APPROVED
         """
         payload: list[dict] = []
 
         for class_section in class_sections:
             data = class_section.model_dump()
+            
+            # validate course_offering.status must be APPROVED
+            course_offering: CourseOffering = await self.course_offering_repo.get_by_id(
+                data['course_offering_id']
+            )
+            
+            if course_offering.status != CourseOfferingStatus.APPROVED:
+                raise InvalidRequestException(
+                    f"Class section registration failed due to course offering status {course_offering.status.lower()}."
+                )
 
             if data.get("section_code"):
                 data["section_code"] = data["section_code"].upper()
@@ -747,6 +758,7 @@ class AcademicStructureService:
                     course_offering_id=class_section.course_offering_id,
                     section_code=class_section.section_code,
                     student_capacity=class_section.student_capacity,
+                    current_student_cnt=class_section.current_student_cnt,
                     status=class_section.status,
                     request_log=GenericResponse(
                         success=True,
