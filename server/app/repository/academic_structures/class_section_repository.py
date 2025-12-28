@@ -4,6 +4,7 @@
 
 from typing import Dict, List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import func, select
 
 from app.models.academic_structures.class_section import ClassSection
 from app.schemas.academic_structure_schema import ClassSectionRequestSchema
@@ -13,6 +14,7 @@ from app.exceptions.customed_exception import *
 from app.repository.base_repository import BaseRepository
 from app.repository.academic_structures.course_offering_repository import CourseOfferingRepository
 from app.repository.academic_structures.term_repository import TermRepository
+from app.models.enrollment_and_gradings.enrollment import Enrollment
 
 
 class ClassSectionRepository(BaseRepository[ClassSection]):
@@ -86,3 +88,13 @@ class ClassSectionRepository(BaseRepository[ClassSection]):
         for instance in instances:
             await self.db.refresh(instance)
         return instances
+
+
+    async def current_student_count(self, class_section_id: str) -> int:
+        stmt = (
+            select(func.count(Enrollment.id))
+            .where(Enrollment.class_section_id == class_section_id)
+        )
+
+        result = await self.db.execute(stmt)
+        return result.scalar_one()

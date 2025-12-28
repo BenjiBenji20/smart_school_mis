@@ -1,10 +1,10 @@
-from datetime import datetime
+from datetime import date, datetime
 from pydantic import BaseModel, Field, field_validator, EmailStr
 
 import regex
 
 from app.exceptions.customed_exception import UnprocessibleContentException
-from app.models.enums.user_state import UserRole, UserGender
+from app.models.enums.user_state import UserRole, UserGender, UserStatus
 
 
 class BaseUserResponseSchema(BaseModel):
@@ -74,4 +74,12 @@ class BaseUserRequestSchema(BaseModel):
 class CredentialValidatorSchema(BaseModel):
     email: str
     password: str
+    
+    
+class StudentResponseSchema(BaseUserResponseSchema):
+    university_code: str
+    status: UserStatus
+    last_school_attended: str| None = None
+    program_enrolled_date: date| None = None
+    year_level: int 
     

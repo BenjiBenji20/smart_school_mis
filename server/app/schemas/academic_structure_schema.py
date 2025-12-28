@@ -9,6 +9,8 @@ from pydantic import BaseModel, Field, field_validator
 from app.schemas.generic_schema import GenericResponse
 from app.models.enums.academic_structure_state import *
 from app.models.enums.user_state import ProfessorStatus
+from app.schemas.base_user_schema import StudentResponseSchema
+from app.models.enums.enrollment_and_grading_state import EnrollmentStatus
 
 # ==============================================
 # BUILDING SCHEMAS
@@ -24,7 +26,7 @@ class RegisterBuildingResponseSchema(BaseModel):
     name: str
     room_capacity: int
     
-    request_log: GenericResponse
+    request_log: GenericResponse | None = None
     
 
 # ==============================================
@@ -45,7 +47,7 @@ class RegisterRoomResponseSchema(BaseModel):
     room_code: str | None = None
     section_capacity: int
     
-    request_log: GenericResponse
+    request_log: GenericResponse | None = None
 
 
 # ==============================================
@@ -64,7 +66,7 @@ class RegisterDepartmentResponseSchema(BaseModel):
     department_code: str | None = None
     description: str | None = None
 
-    request_log: GenericResponse
+    request_log: GenericResponse | None = None
     
 
 # ==============================================
@@ -86,7 +88,7 @@ class RegisterProgramResponseSchema(BaseModel):
     
     department_id: str | None = None
 
-    request_log: GenericResponse
+    request_log: GenericResponse | None = None
 
 
 # ==============================================
@@ -109,7 +111,7 @@ class RegisterCurriculumResponseSchema(BaseModel):
     status: CurriculumStatus
     program_id: str
         
-    request_log: GenericResponse
+    request_log: GenericResponse | None = None
 
 
 # ==============================================
@@ -130,7 +132,7 @@ class RegisterCourseResponseSchema(BaseModel):
     units: int
     description: str | None = None
 
-    request_log: GenericResponse
+    request_log: GenericResponse | None = None
     
     
 # ==============================================
@@ -153,7 +155,7 @@ class RegisterCurriculumCourseResponseSchema(BaseModel):
     curriculum_id: str
     course_id: str
     
-    request_log: GenericResponse
+    request_log: GenericResponse | None = None
      
      
 # ==============================================
@@ -181,7 +183,7 @@ class TermResponseSchema(BaseModel):
     semester_period: SemesterPeriod
     status: TermStatus
     
-    request_log: GenericResponse
+    request_log: GenericResponse | None = None
 
 
 # ==============================================
@@ -200,7 +202,7 @@ class CourseOfferingResponseSchema(BaseModel):
     curriculum_course_id: str
     status: CourseOfferingStatus
     
-    request_log: GenericResponse
+    request_log: GenericResponse | None = None
     
     
 # ==============================================
@@ -219,9 +221,10 @@ class ClassSectionResponseSchema(BaseModel):
     course_offering_id: str
     section_code: str
     student_capacity: int
+    current_student_cnt: int
     status: ClassSectionStatus
     
-    request_log: GenericResponse
+    request_log: GenericResponse | None = None
     
     
 # ==============================================
@@ -251,7 +254,7 @@ class ProfessorClassSectionResponseSchema(BaseModel):
     time_schedule: str | None = None
     class_section_status: ClassSectionStatus
     
-    request_log: GenericResponse
+    request_log: GenericResponse | None = None
     
     
 # ==============================================
@@ -282,4 +285,5 @@ class ClassScheduleResponseSchema(BaseModel):
     start_time: time
     end_time: time
     
-    request_log: GenericResponse
+    request_log: GenericResponse | None = None
+    
