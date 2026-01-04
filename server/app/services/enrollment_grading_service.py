@@ -26,14 +26,15 @@ from app.models.users.student import Student
 from app.models.enrollment_and_gradings.enrollment import Enrollment
 
 
-class GradingEnrollmentService:
+class EnrollmentGradingService:
     """
-        Services exclusive only to registrar role.
+        Services list for enrollment and grading services.
             - Read student allowed class sections
             - Enroll student to class section
             - Read all enrollments
             - Read filtered enrollments
             - Update status of enrollments
+            - List enrollment by status
     """
     def __init__(self, db: AsyncSession):
         self.db = db
@@ -329,5 +330,27 @@ class GradingEnrollmentService:
                 )
             )
         
-        return response
+        return response  
+    
+    
+    async def list_enrollment_by_status(self, enrollment_status: EnrollmentStatus) -> List[EnrollmentResponseSchema]:
+        response: List[EnrollmentResponseSchema] = []
+        enrollments = await self.enrollment_repo.list_enrollment_by_status(enrollment_status)
         
+        for enrollment in enrollments:
+            student: Student = await self.student_repo.get_student_by_id(enrollment.student_id)
+            class_section: ClassSection = await self.class_section_repo.get_by_id(enrollment.class_section_id)
+            term: Term = await self.term_repo.get_by_id(enrollment.term_id)
+        
+            response.append(
+                self.format_enrollment_response(
+                    status=enrollment.status,
+                    student=student,
+                    class_section=class_section,
+                    term=term,
+                    description="List all the enrollments based on status."
+                )
+            )
+        
+        return response  
+    

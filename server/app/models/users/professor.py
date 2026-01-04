@@ -18,6 +18,7 @@ class Professor(BaseUser):
     department_id = Column(String(36), ForeignKey("department.id"), nullable=True)
     
     
+    # Link Column with ProfessorClassSection
     class_section_links = relationship(
         "ProfessorClassSection",
         back_populates="professor",

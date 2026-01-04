@@ -98,3 +98,12 @@ class ClassSectionRepository(BaseRepository[ClassSection]):
 
         result = await self.db.execute(stmt)
         return result.scalar_one()
+
+
+    async def list_class_sections_by_course_offering(self, course_offering_id: str) -> List[ClassSection]:
+        stmt = select(ClassSection).where(
+            ClassSection.course_offering_id == course_offering_id
+        )
+        
+        result = await self.db.execute(stmt)
+        return result.scalars().all()

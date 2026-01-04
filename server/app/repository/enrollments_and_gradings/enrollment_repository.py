@@ -97,3 +97,13 @@ class EnrollmentRepository(BaseRepository[Enrollment]):
         updated_enrollments = result.scalars().all()
         await self.db.commit()
         return updated_enrollments
+    
+    
+    async def list_enrollment_by_status(self, enrollment_status: EnrollmentStatus) -> List[Enrollment]:
+        stmt = select(Enrollment).where(
+            Enrollment.status == enrollment_status
+        )
+        
+        result = await self.db.execute(stmt)
+        return result.scalars().all()
+    

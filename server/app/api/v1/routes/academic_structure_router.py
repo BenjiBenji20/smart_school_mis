@@ -21,9 +21,9 @@ academic_structure_router = APIRouter(
     tags=["API's for interacting with academic structure"]
 )
 
-@academic_structure_router.post("/register-building", response_model=RegisterBuildingResponseSchema)
+@academic_structure_router.post("/register-building", response_model=BuildingResponseSchema)
 async def register_building(
-    building: RegisterBuildingRequestSchema,
+    building: BuildingRequestSchema,
     db: AsyncSession = Depends(get_async_db),
     current_user: Registrar = Depends(get_current_user),
     allowed_roles = Depends(role_required([UserRole.ADMINISTRATOR]))
@@ -41,9 +41,18 @@ async def register_building(
     )
     
     
-@academic_structure_router.post("/register-room", response_model=List[RegisterRoomResponseSchema])
+@academic_structure_router.get("/list-buildings", response_model=List[BuildingResponseSchema])
+async def list_buildings(
+    db: AsyncSession = Depends(get_async_db),
+    allowed_roles = Depends(role_required([UserRole.ADMINISTRATOR]))
+):
+    service = AcademicStructureService(db)
+    return await service.list_buildings()
+    
+    
+@academic_structure_router.post("/register-room", response_model=List[RoomResponseSchema])
 async def register_room(
-    rooms: List[RegisterRoomRequestSchema],
+    rooms: List[RoomRequestSchema],
     db: AsyncSession = Depends(get_async_db),
     current_user: Registrar = Depends(get_current_user),
     allowed_roles = Depends(role_required([UserRole.ADMINISTRATOR]))
@@ -61,10 +70,19 @@ async def register_room(
     )
 
 
+@academic_structure_router.get("/list-rooms/building/{building_id}", response_model=List[RoomResponseSchema])
+async def list_rooms_by_building(
+    building_id: str,
+    db: AsyncSession = Depends(get_async_db),
+    allowed_roles = Depends(role_required([UserRole.ADMINISTRATOR]))
+):
+    service = AcademicStructureService(db)
+    return await service.list_rooms_by_building(building_id)
 
-@academic_structure_router.post("/register-department", response_model=RegisterDepartmentResponseSchema)
+
+@academic_structure_router.post("/register-department", response_model=DepartmentResponseSchema)
 async def register_department(
-    department: RegisterDepartmentRequestSchema,
+    department: DepartmentRequestSchema,
     db: AsyncSession = Depends(get_async_db),
     current_user: Registrar = Depends(get_current_user),
     allowed_roles = Depends(role_required([UserRole.REGISTRAR]))
@@ -77,7 +95,16 @@ async def register_department(
         department=department,
         requested_by=current_user.first_name + " " + current_user.last_name
     )
-    
+
+
+@academic_structure_router.get("/list-departments", response_model=List[DepartmentResponseSchema])
+async def list_departments(
+    db: AsyncSession = Depends(get_async_db),
+    allowed_roles = Depends(role_required([UserRole.REGISTRAR]))
+):
+    service = AcademicStructureService(db)
+    return await service.list_departments()
+
     
 @academic_structure_router.patch(
     "/department/{department_id}/building/{building_id}", 
@@ -104,9 +131,9 @@ async def register_department_building(
     )
     
     
-@academic_structure_router.post("/register-program", response_model=List[RegisterProgramResponseSchema])
+@academic_structure_router.post("/register-program", response_model=List[ProgramResponseSchema])
 async def register_program(
-    programs: List[RegisterProgramRequestSchema],
+    programs: List[ProgramRequestSchema],
     db: AsyncSession = Depends(get_async_db),
     current_user: Registrar = Depends(get_current_user),
     allowed_roles = Depends(role_required([UserRole.REGISTRAR]))
@@ -121,9 +148,22 @@ async def register_program(
     )
 
 
-@academic_structure_router.post("/register-curriculum", response_model=RegisterCurriculumResponseSchema)
+@academic_structure_router.get(
+    "/list-programs/department/{department_id}", 
+    response_model=List[ProgramResponseSchema]
+)
+async def list_programs_by_department(
+    department_id: str,
+    db: AsyncSession = Depends(get_async_db),
+    allowed_roles = Depends(role_required([UserRole.REGISTRAR, UserRole.DEAN]))
+):
+    service = AcademicStructureService(db)
+    return await service.list_programs_by_department(department_id)
+
+
+@academic_structure_router.post("/register-curriculum", response_model=CurriculumResponseSchema)
 async def register_curriculum(
-    curriculum: RegisterCurriculumRequestSchema,
+    curriculum: CurriculumRequestSchema,
     db: AsyncSession = Depends(get_async_db),
     current_user: Registrar = Depends(get_current_user),
     allowed_roles = Depends(role_required([UserRole.REGISTRAR]))
@@ -137,6 +177,19 @@ async def register_curriculum(
         requested_by=current_user.first_name + " " + current_user.last_name
     )
     
+    
+@academic_structure_router.get(
+    "/list-curriculums/program/{program_id}", 
+    response_model=List[CurriculumResponseSchema]
+)
+async def list_curriculums_by_program(
+    program_id: str,
+    db: AsyncSession = Depends(get_async_db),
+    allowed_roles = Depends(role_required([UserRole.REGISTRAR, UserRole.DEAN]))
+):
+    service = AcademicStructureService(db)
+    return await service.list_curriculums_by_program(program_id)
+
     
 @academic_structure_router.patch("/curriculum/{id}/status/{status}", response_model=GenericResponse)
 async def update_curriculum_status(
@@ -159,9 +212,9 @@ async def update_curriculum_status(
     )
 
 
-@academic_structure_router.post("/register-course", response_model=List[RegisterCourseResponseSchema])
+@academic_structure_router.post("/register-course", response_model=List[CourseResponseSchema])
 async def register_course(
-    courses: List[RegisterCourseRequestSchema],
+    courses: List[CourseRequestSchema],
     db: AsyncSession = Depends(get_async_db),
     current_user: Registrar = Depends(get_current_user),
     allowed_roles = Depends(role_required([UserRole.REGISTRAR]))
@@ -176,9 +229,18 @@ async def register_course(
     )
     
 
-@academic_structure_router.post("/register-curriculum-course", response_model=List[RegisterCurriculumCourseResponseSchema])
+@academic_structure_router.get("/list-courses", response_model=List[CourseResponseSchema])    
+async def list_courses(
+    db: AsyncSession = Depends(get_async_db),
+    allowed_roles = Depends(role_required([UserRole.REGISTRAR, UserRole.DEAN]))
+):
+    service = AcademicStructureService(db)
+    return await service.list_courses()
+
+
+@academic_structure_router.post("/register-curriculum-course", response_model=List[CurriculumCourseResponseSchema])
 async def register_curriculum_course(
-    curriculum_courses: List[RegisterCurriculumCourseRequestSchema],
+    curriculum_courses: List[CurriculumCourseRequestSchema],
     db: AsyncSession = Depends(get_async_db),
     current_user: Registrar = Depends(get_current_user),
     allowed_roles = Depends(role_required([UserRole.REGISTRAR]))
@@ -190,6 +252,25 @@ async def register_curriculum_course(
     return await service.register_curriculum_course(
         curriculum_courses=curriculum_courses,
         requested_by=current_user.first_name + " " + current_user.last_name
+    )
+
+
+@academic_structure_router.get(
+    "/list-curriculum-courses/curriculum/{curriculum_id}/year_level/{year_level}/semester/{semester}",
+    response_model=List[CurriculumCourseResponseSchema]
+)
+async def list_curriculum_course_by_field(
+    curriculum_id: str = None,
+    year_level: int = None,
+    semester: int = None,
+    db: AsyncSession = Depends(get_async_db),
+    allowed_roles = Depends(role_required([UserRole.REGISTRAR]))
+):
+    service = AcademicStructureService(db)
+    return await service.list_curriculum_course_by_field(
+        curriculum_id=curriculum_id,
+        year_level=year_level,
+        semester=semester
     )
 
 
@@ -275,7 +356,7 @@ async def register_course_offering(
     allowed_roles = Depends(role_required([UserRole.REGISTRAR]))
 ):
     """
-        Register course_offering one at a time (Registrar only).
+         course_offering one at a time (Registrar only).
         Status is PENDING at registration. 
         Must be update by registrar or dean.
     """
@@ -284,6 +365,16 @@ async def register_course_offering(
         course_offering=course_offering,
         requested_by=current_user.first_name + " " + current_user.last_name
     )
+
+
+@academic_structure_router.get("/list-course-offerings/term/{term_id}", response_model=List[CourseOfferingResponseSchema])
+async def list_course_offering_by_term(
+    term_id: str,
+    db: AsyncSession = Depends(get_async_db),
+    allowed_roles = Depends(role_required([UserRole.REGISTRAR, UserRole.DEAN]))
+):
+    service = AcademicStructureService(db)
+    return await service.list_course_offering_by_term(term_id)
 
 
 @academic_structure_router.patch("/course-offering/{id}/status/{status}", response_model=GenericResponse)
@@ -373,4 +464,19 @@ async def assign_schedule_class_section(
     return await service.assign_schedule_class_section(
         class_schedule=class_schedule,
         requested_by=current_user.first_name + " " + current_user.last_name
+    )
+
+
+@academic_structure_router.get(
+    "/list-class-schedules/class-section/{class_section_id}",
+    response_model=List[ClassScheduleResponseSchema]
+)
+async def list_class_schedule_by_section(
+    class_section_id: str,
+    db: AsyncSession = Depends(get_async_db),
+    allowed_roles = Depends(role_required([UserRole.REGISTRAR, UserRole.DEAN]))
+):
+    service = AcademicStructureService(db)
+    return await service.list_class_schedule_by_section(
+        class_section_id
     )

@@ -46,3 +46,12 @@ class ClassScheduleRepository(BaseRepository[ClassSchedule]):
         schedules = result.scalars().all()
         return schedules
         
+        
+    async def list_class_schedule_by_section(self, class_section_id: str) -> List[ClassSchedule]:
+        stmt = select(ClassSchedule).where(
+            ClassSchedule.class_section_id == class_section_id
+        )
+        
+        result = await self.db.execute(stmt)
+        return result.scalars().all()
+        

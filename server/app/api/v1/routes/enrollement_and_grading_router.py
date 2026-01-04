@@ -14,7 +14,7 @@ from app.schemas.academic_structure_schema import *
 from app.schemas.enrollments_and_gradings_schema import *
 from app.db.db_session import get_async_db
 from app.middleware.current_user import get_current_user
-from app.services.enrollment_grading_service import GradingEnrollmentService
+from app.services.enrollment_grading_service import EnrollmentGradingService
 from app.models.users.student import Student
 
 enrollment_grading_router = APIRouter(
@@ -35,7 +35,7 @@ async def get_allowed_section(
         - Courses must be under the student's program
         - Courses must be isn't taken by the student [not sure about this]
     """
-    service = GradingEnrollmentService(db)
+    service = EnrollmentGradingService(db)
     return await service.get_student_allowed_sections(
         student_id=current_user.id,
         requested_by=current_user.first_name + " " + current_user.last_name
@@ -67,7 +67,7 @@ async def enroll_student_class_section(
             CourseOffering.status == APPROVED
 
     """
-    service = GradingEnrollmentService(db)
+    service = EnrollmentGradingService(db)
     return await service.enroll_student_class_section(
         student_id=student_id,
         class_section_id=class_section_id,
@@ -83,7 +83,7 @@ async def get_all_enrollments(
     """
         Read all student enrollment (Registrar role only)
     """
-    service = GradingEnrollmentService(db)
+    service = EnrollmentGradingService(db)
     return await service.get_all_enrollments()
     
     
@@ -102,7 +102,7 @@ async def get_all_enrollments(
     """
         Read all student enrollment (Registrar role only)
     """
-    service = GradingEnrollmentService(db)
+    service = EnrollmentGradingService(db)
     return await service.get_filtered_enrollments(
         department_id=department_id,
         program_id=program_id,
@@ -122,9 +122,21 @@ async def update_enrollment_status(
         Update multiple enrollments (registrar role only)
             All the enrollment (through id) will be updated using 1 status
     """
-    service = GradingEnrollmentService(db)
+    service = EnrollmentGradingService(db)
     return await service.update_enrollment_status(
         enrollments=enrollments,
         requested_by=current_user.first_name + " " + current_user.last_name
+    )
+    
+
+@enrollment_grading_router.get("/list/status/{enrollment_status}", response_model=List[EnrollmentResponseSchema])
+async def list_enrollment_by_status(
+    enrollment_status: EnrollmentStatus,
+    db: AsyncSession = Depends(get_async_db),
+    allowed_roles = Depends(role_required([UserRole.REGISTRAR]))
+):
+    service = EnrollmentGradingService(db)
+    return await service.list_enrollment_by_status(
+        enrollment_status=enrollment_status
     )
     

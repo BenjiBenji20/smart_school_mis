@@ -104,3 +104,13 @@ class StudentRepository(BaseRepository[Student]):
 
         result = await self.db.execute(stmt)
         return result.scalar()
+    
+    
+    async def get_my_current_enrollments(self, student_id: str) -> List[Enrollment]:
+        stmt = select(Enrollment).where(
+            Enrollment.student_id == student_id
+        )
+        
+        result = await self.db.execute(stmt)
+        return result.scalars().all()
+    

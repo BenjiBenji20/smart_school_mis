@@ -2,7 +2,7 @@
     Date Written: 12/24/2025 at 11:18 AM
 """
 
-from typing import Optional
+from typing import List, Optional
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -93,4 +93,13 @@ class CourseOfferingRepository(BaseRepository[CourseOffering]):
         )
         course_offering = result.scalars().first()
         return course_offering
+    
+    
+    async def list_course_offering_by_term(self, term_id: str) -> List[CourseOffering]:
+        stmt = select(CourseOffering).where(
+            CourseOffering.term_id == term_id
+        )
+        
+        result = await self.db.execute(stmt)
+        return result.scalars().all()
         

@@ -15,12 +15,12 @@ from app.models.enums.enrollment_and_grading_state import EnrollmentStatus
 # ==============================================
 # BUILDING SCHEMAS
 # ==============================================
-class RegisterBuildingRequestSchema(BaseModel):
+class BuildingRequestSchema(BaseModel):
     name: str = Field(..., max_length=100)
     room_capacity: int
     
 
-class RegisterBuildingResponseSchema(BaseModel):
+class BuildingResponseSchema(BaseModel):
     id: str
     created_at: datetime
     name: str
@@ -32,7 +32,7 @@ class RegisterBuildingResponseSchema(BaseModel):
 # ==============================================
 # BUILDING SCHEMAS
 # ==============================================
-class RegisterRoomRequestSchema(BaseModel):
+class RoomRequestSchema(BaseModel):
     room_code: str | None = Field(default=None, max_length=10)
     section_capacity: int # section capacity MAX 10
 
@@ -40,12 +40,11 @@ class RegisterRoomRequestSchema(BaseModel):
     building_id: str = Field(..., max_length=36)
     
 
-class RegisterRoomResponseSchema(BaseModel):
+class RoomResponseSchema(BaseModel):
     id: str
     created_at: datetime
     building_id: str
     room_code: str | None = None
-    section_capacity: int
     
     request_log: GenericResponse | None = None
 
@@ -53,13 +52,13 @@ class RegisterRoomResponseSchema(BaseModel):
 # ==============================================
 # DEPARTMENT SCHEMAS
 # ==============================================
-class RegisterDepartmentRequestSchema(BaseModel):
+class DepartmentRequestSchema(BaseModel):
     title: str = Field(..., max_length=100)
     department_code: str | None = None
     description: str | None = None
 
 
-class RegisterDepartmentResponseSchema(BaseModel):
+class DepartmentResponseSchema(BaseModel):
     id: str
     created_at: datetime
     title: str
@@ -72,14 +71,14 @@ class RegisterDepartmentResponseSchema(BaseModel):
 # ==============================================
 # PROGRAM SCHEMAS
 # ==============================================
-class RegisterProgramRequestSchema(BaseModel):
+class ProgramRequestSchema(BaseModel):
     title: str = Field(..., max_length=100)
     program_code: str | None = None
     description: str | None = None
     department_id: str | None = None
 
 
-class RegisterProgramResponseSchema(BaseModel):
+class ProgramResponseSchema(BaseModel):
     id: str
     created_at: datetime
     title: str
@@ -94,7 +93,7 @@ class RegisterProgramResponseSchema(BaseModel):
 # ==============================================
 # CURRICULUM SCHEMAS
 # ==============================================
-class RegisterCurriculumRequestSchema(BaseModel):
+class CurriculumRequestSchema(BaseModel):
     title: str = Field(..., max_length=100)
     effective_from: int
     effective_to: int | None = None
@@ -102,7 +101,7 @@ class RegisterCurriculumRequestSchema(BaseModel):
     program_id: str = Field(..., max_length=36)
     
     
-class RegisterCurriculumResponseSchema(BaseModel):
+class CurriculumResponseSchema(BaseModel):
     id: str
     created_at: datetime
     title: str
@@ -117,14 +116,14 @@ class RegisterCurriculumResponseSchema(BaseModel):
 # ==============================================
 # COURSE SCHEMAS
 # ==============================================
-class RegisterCourseRequestSchema(BaseModel):
+class CourseRequestSchema(BaseModel):
     title: str = Field(..., max_length=100)
     course_code: str | None = None
     units: int
     description: str | None = None
 
 
-class RegisterCourseResponseSchema(BaseModel):
+class CourseResponseSchema(BaseModel):
     id: str
     created_at: datetime
     title: str
@@ -138,7 +137,7 @@ class RegisterCourseResponseSchema(BaseModel):
 # ==============================================
 # CURRICULUMCOURSE SCHEMAS
 # ==============================================    
-class RegisterCurriculumCourseRequestSchema(BaseModel):
+class CurriculumCourseRequestSchema(BaseModel):
     year_level: int
     semester: int
     is_required: bool
@@ -146,11 +145,9 @@ class RegisterCurriculumCourseRequestSchema(BaseModel):
     course_id: str = Field(..., max_length=36)
     
     
-class RegisterCurriculumCourseResponseSchema(BaseModel):
+class CurriculumCourseResponseSchema(BaseModel):
     id: str
     created_at: datetime
-    year_level: int
-    semester: int
     is_required: bool
     curriculum_id: str
     course_id: str

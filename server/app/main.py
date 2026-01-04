@@ -76,6 +76,7 @@ from app.api.v1.routes.professor_router import prof_router
 from app.api.v1.routes.dean_router import dean_router
 from app.api.v1.routes.program_chair_router import program_chair_router
 from app.api.v1.routes.enrollement_and_grading_router import enrollment_grading_router
+from app.api.v1.routes.student_router import student_router
 
 
 # middlewares
@@ -121,6 +122,7 @@ app.include_router(prof_router)
 app.include_router(dean_router)
 app.include_router(program_chair_router)
 app.include_router(enrollment_grading_router)
+app.include_router(student_router)
 
 
 # regiustering global exeception handler

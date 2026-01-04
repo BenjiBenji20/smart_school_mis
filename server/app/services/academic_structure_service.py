@@ -29,27 +29,43 @@ from app.models.academic_structures.course_offering import CourseOffering
 from app.models.academic_structures.curriculum import Curriculum
 from app.models.academic_structures.department import Department
 from app.models.academic_structures.class_schedule import ClassSchedule
+from app.models.locations.building import Building
+from app.models.locations.room import Room
+from app.models.academic_structures.program import Program
+from app.models.academic_structures.curriculum_course import CurriculumCourse
+from app.models.academic_structures.course import Course
+from app.models.academic_structures.class_section import ClassSection
 
 
 class AcademicStructureService:
     """
-        Services exclusive only to registrar role.
+        Services list for academic structure route.
             - Register new building
+            - List buildings
             - Register new rooms
+            - List rooms by building
             - Register new department
+            - List departments
             - Assign department building
             - Register new programs
+            - List programs by department
             - Register new curriculum
+            - List curriculums by program
             - Update curriculum status
             - Register new courses
+            - List courses
             - Register new curriculum courses
             - Register new terms
             - Update term's status
             - Register course offering
+            - List course offering by term
+            - List curriculum course by field
             - Update course offerings's status
             - Register class section
+            - List class sections by course offering
             - Assign class section professor
             - Assign a schedule to class section
+            - List class schedule by section
     """
     def __init__(self, db: AsyncSession):
         self.db = db
@@ -67,14 +83,13 @@ class AcademicStructureService:
         self.prof_class_section_repo = ProfessorClassSectionRepository(db)
         self.class_schedule_repo = ClassScheduleRepository(db)
         
-        
     async def register_building(
         self,
-        building: RegisterBuildingRequestSchema,
+        building: BuildingRequestSchema,
         requested_by: str
-    ) -> RegisterBuildingResponseSchema:
+    ) -> BuildingResponseSchema:
         """
-            Register building
+             building
             param building: 
                 name: str (building name)
                 capacity: int (number of rooms)
@@ -87,7 +102,7 @@ class AcademicStructureService:
             room_capacity=building_dict["room_capacity"]
         )
         
-        return RegisterBuildingResponseSchema(
+        return BuildingResponseSchema(
             id=register_building.id,
             created_at=register_building.created_at,
             name=register_building.name,
@@ -101,16 +116,36 @@ class AcademicStructureService:
         )
         
         
+    async def list_buildings(self) -> List[BuildingResponseSchema]:
+        """
+            list of buildings (registrar role)
+        """
+        payload: List[dict] = []
+        buildings: List[Building] = await self.building_repo.get_all()
+        for building in buildings:
+            payload.append(
+                BuildingResponseSchema(
+                    id=building.id,
+                    created_at=building.created_at,
+                    name=building.name,
+                    room_capacity=building.room_capacity,
+                    request_log=GenericResponse(
+                        success=True,
+                        requested_at=datetime.now(timezone.utc),
+                    )
+                )
+            )
+            
+        return payload        
+        
+        
     async def register_room(
         self,
-        rooms: List[RegisterRoomRequestSchema],
+        rooms: List[RoomRequestSchema],
         requested_by: str = None
-    ) -> List[RegisterRoomResponseSchema]:
+    ) -> List[RoomResponseSchema]:
         """
             Register room (administrator role)
-            param room: 
-                room_code: str (room name)
-                capacity: int (number of students)
         """
         payload: list[dict] = []
 
@@ -130,15 +165,14 @@ class AcademicStructureService:
                 "Room registration failed. Try again."
             )
         
-        response: List[RegisterRoomResponseSchema] = []
+        response: List[RoomResponseSchema] = []
         
         for room in registered_rooms:
             response.append(
-                RegisterRoomResponseSchema(
+                RoomResponseSchema(
                     id=str(room.id),
                     created_at=room.created_at,
                     room_code=room.room_code,
-                    section_capacity=room.section_capacity,
                     building_id=room.building_id,
                     request_log=GenericResponse(
                         success=True,
@@ -152,11 +186,31 @@ class AcademicStructureService:
         return response
         
         
+    async def list_rooms_by_building(self, building_id: str) -> List[RoomResponseSchema]:
+        payload: List[dict] = []
+        rooms: List[Room] = await self.room_repo.list_rooms_by_building(building_id)
+        for room in rooms:
+            payload.append(
+                RoomResponseSchema(
+                    id=room.id,
+                    created_at=room.created_at,
+                    room_code=room.room_code,
+                    building_id=room.building_id,
+                    request_log=GenericResponse(
+                        success=True,
+                        requested_at=datetime.now(timezone.utc)
+                    )
+                )
+            )
+            
+        return payload
+        
+        
     async def register_department(
         self,
-        department: RegisterDepartmentRequestSchema,
+        department: DepartmentRequestSchema,
         requested_by: str
-    ) -> RegisterDepartmentResponseSchema:
+    ) -> DepartmentResponseSchema:
         """
             Register one department at a time
             to avoid spamming.
@@ -172,7 +226,7 @@ class AcademicStructureService:
             description=department_dict["description"]
         )
         
-        return RegisterDepartmentResponseSchema(
+        return DepartmentResponseSchema(
             id=register_department.id,
             created_at=register_department.created_at,
             title=register_department.title,
@@ -186,6 +240,27 @@ class AcademicStructureService:
             )
         )
         
+        
+    async def list_departments(self) -> List[DepartmentResponseSchema]:
+        payload: List[dict] = []
+        departments: List[Department] = await self.department_repo.get_all()
+        for department in departments:
+            payload.append(
+                DepartmentResponseSchema(
+                    id=department.id,
+                    created_at=department.created_at,
+                    title=department.title,
+                    department_code=department.department_code,
+                    description=department.description,
+                    request_log=GenericResponse(
+                        success=True,
+                        requested_at=datetime.now(timezone.utc),
+                    )
+                )
+            )
+            
+        return payload
+    
         
     async def assign_department_building(
         self,
@@ -226,9 +301,9 @@ class AcademicStructureService:
         
     async def register_program(
         self, 
-        programs: List[RegisterProgramRequestSchema], 
+        programs: List[ProgramRequestSchema], 
         requested_by: str
-    ) -> List[RegisterProgramResponseSchema]:
+    ) -> List[ProgramResponseSchema]:
         """
             Register one or multiple program (Registrar role only) 
         """
@@ -250,11 +325,11 @@ class AcademicStructureService:
                 "Program registration failed. Try again."
             )
         
-        response: List[RegisterProgramResponseSchema] = []
+        response: List[ProgramResponseSchema] = []
         
         for program in registered_programs:
             response.append(
-                RegisterProgramResponseSchema(
+                ProgramResponseSchema(
                     id=str(program.id),
                     created_at=program.created_at,
                     title=program.title,
@@ -273,11 +348,33 @@ class AcademicStructureService:
         return response
     
     
+    async def list_programs_by_department(self, department_id: str) -> List[ProgramResponseSchema]:
+        payload: List[dict] = []
+        programs: List[Program] = await self.program_repo.list_programs_by_department(department_id)
+        for program in programs:
+            payload.append(
+                ProgramResponseSchema(
+                    id=program.id,
+                    created_at=program.created_at,
+                    title=program.title,
+                    program_code=program.program_code,
+                    description=program.description,
+                    department_id=program.department_id,
+                    request_log=GenericResponse(
+                        success=True,
+                        requested_at=datetime.now(timezone.utc)
+                    )
+                )
+            )
+            
+        return payload
+    
+    
     async def register_curriculum(
         self,
-        curriculum: RegisterCurriculumRequestSchema,
+        curriculum: CurriculumRequestSchema,
         requested_by: str
-    ) -> RegisterCurriculumResponseSchema:
+    ) -> CurriculumResponseSchema:
         """
             Register one curriculum at a time
             to avoid spamming.
@@ -295,7 +392,7 @@ class AcademicStructureService:
             program_id = curriculum_dict["program_id"]
         )
         
-        return RegisterCurriculumResponseSchema(
+        return CurriculumResponseSchema(
             id=register_curriculum.id,
             created_at=register_curriculum.created_at,
             title=register_curriculum.title,
@@ -352,20 +449,43 @@ class AcademicStructureService:
                 requested_by=requested_by,
                 description=f"Curriculum status successfully updated to {status.value.lower()}."
             )
-       
+    
+    
+    async def list_curriculums_by_program(self, program_id: str) -> List[CurriculumResponseSchema]:
+        payload: List[dict] = []
+        curriculums: List[Curriculum] = await self.curriculum_repo.list_curriculums_by_program(program_id)
+        for curriculum in curriculums:
+            payload.append(
+                CurriculumResponseSchema(
+                    id=curriculum.id,
+                    created_at=curriculum.created_at,
+                    title=curriculum.title,
+                    effective_from=curriculum.effective_from,
+                    effective_to=curriculum.effective_to,
+                    status=curriculum.status,
+                    program_id=curriculum.program_id,
+                    request_log=GenericResponse(
+                        success=True,
+                        requested_at=datetime.now(timezone.utc)
+                    )
+                )
+            )
+            
+        return payload
+    
         
     async def register_course(
         self, 
-        courses: List[RegisterCourseRequestSchema], 
+        courses: List[CourseRequestSchema], 
         requested_by: str
-    ) -> List[RegisterCourseResponseSchema]:
+    ) -> List[CourseResponseSchema]:
         """
             Register courses 
         
             :param courses: list of courses (can be 1)
             :type courses: List[Course]
             :return: with appropriate data log
-            :rtype: RegisterCourseResponseSchema
+            :rtype: CourseResponseSchema
         """
         payload: list[dict] = []
 
@@ -385,11 +505,11 @@ class AcademicStructureService:
                 "Course registration failed. Try again."
             )
         
-        response: List[RegisterCourseResponseSchema] = []
+        response: List[CourseResponseSchema] = []
         
         for course in registered_courses:
             response.append(
-                RegisterCourseResponseSchema(
+                CourseResponseSchema(
                     id=str(course.id),
                     created_at=course.created_at,
                     title=course.title,
@@ -408,18 +528,40 @@ class AcademicStructureService:
         return response
     
     
+    async def list_courses(self) -> List[CourseResponseSchema]:
+        payload: List[dict] = []
+        courses: List[Course] = await self.course_repo.get_all()
+        for course in courses:
+            payload.append(
+                CourseResponseSchema(
+                    id=course.id,
+                    created_at=course.created_at,
+                    title=course.title,
+                    course_code=course.course_code,
+                    units=course.units,
+                    description=course.description,
+                    request_log=GenericResponse(
+                        success=True,
+                        requested_at=datetime.now(timezone.utc)
+                    )
+                )
+            )
+            
+        return payload
+    
+    
     async def register_curriculum_course(
         self, 
-        curriculum_courses: List[RegisterCurriculumCourseRequestSchema], 
+        curriculum_courses: List[CurriculumCourseRequestSchema], 
         requested_by: str
-    ) -> List[RegisterCurriculumCourseResponseSchema]:
+    ) -> List[CurriculumCourseResponseSchema]:
         """
             Register one or multiple curriculum courses (Registrar only) 
         
             :param courses: list of courses (can be 1)
             :type courses: List[Course]
             :return: with appropriate data log
-            :rtype: RegisterCurriculumCourseResponseSchema
+            :rtype: CurriculumCourseResponseSchema
         """
         payload: list[dict] = []
 
@@ -435,11 +577,11 @@ class AcademicStructureService:
                 "Curriculum course registration failed. Try again."
             )
         
-        response: List[RegisterCurriculumCourseResponseSchema] = []
+        response: List[CurriculumCourseResponseSchema] = []
         
         for curriculum_course in registered_curriculum_courses:
             response.append(
-                RegisterCurriculumCourseResponseSchema(
+                CurriculumCourseResponseSchema(
                     id=str(curriculum_course.id),
                     created_at=curriculum_course.created_at,
                     year_level=curriculum_course.year_level,
@@ -459,6 +601,37 @@ class AcademicStructureService:
         return response
     
     
+    async def list_curriculum_course_by_field(
+        self,
+        curriculum_id: str = None,
+        year_level: int = None,
+        semester: int = None
+    ) -> List[CurriculumCourseResponseSchema]:
+        payload: List[dict] = []
+        curriculum_courses: List[CurriculumCourse] = await self.curriculum_course_repo.list_curriculum_course_by_field(
+            curriculum_id=curriculum_id,
+            year_level=year_level,
+            semester=semester
+        )
+        
+        for curriculum_course in curriculum_courses:
+            payload.append(
+                CurriculumCourseResponseSchema(
+                    id=curriculum_course.id,
+                    created_at=curriculum_course.created_at,
+                    is_required=curriculum_course.is_required,
+                    curriculum_id=curriculum_course.curriculum_id,
+                    course_id=curriculum_course.course_id,
+                    request_log=GenericResponse(
+                        success=True,
+                        requested_at=datetime.now(timezone.utc)
+                    )
+                )
+            )
+
+        return payload
+    
+    
     async def register_term(
         self, 
         terms: List[TermRequestSchema], 
@@ -469,7 +642,7 @@ class AcademicStructureService:
         
             :param courses: list of terms (can be 1)
             :return: with appropriate data log
-            :rtype: RegisterTermResponseSchema
+            :rtype: TermResponseSchema
         """
         payload: list[dict] = []
 
@@ -669,6 +842,27 @@ class AcademicStructureService:
         )
 
 
+    async def list_course_offering_by_term(self, term_id: str) -> List[CourseOfferingResponseSchema]:
+        payload: List[dict] = []
+        course_offerings = await self.course_offering_repo.list_course_offering_by_term(term_id)
+        for course_offering in course_offerings:
+            payload.append(
+                CourseOfferingResponseSchema(
+                    id=course_offering.id,
+                    created_at=course_offering.created_at,
+                    term_id=course_offering.term_id,
+                    curriculum_course_id=course_offering.curriculum_course_id,
+                    status=course_offering.status,
+                    request_log=GenericResponse(
+                        success=True,
+                        requested_at=datetime.now(timezone.utc)
+                    )
+                )
+            )
+            
+        return payload
+
+
     async def update_course_offering_status(
         self,
         id: str,
@@ -771,6 +965,32 @@ class AcademicStructureService:
 
         return response
         
+    
+    async def list_class_sections_by_course_offering(self, course_offering_id: str) -> List[ClassSectionResponseSchema]:
+        payload: List[dict] = []
+        class_sections: List[ClassSection] = await self.class_section_repo.list_class_sections_by_course_offering(
+            course_offering_id
+        )
+        
+        for class_section in class_sections:
+            payload.append(
+                ClassSectionResponseSchema(
+                    id=class_section.id,
+                    created_at=class_section.created_at,
+                    course_offering_id=class_section.course_offering_id,
+                    section_code=class_section.section_code,
+                    student_capacity=class_section.student_capacity,
+                    current_student_cnt=class_section.current_student_cnt,
+                    status=class_section.status,
+                    request_log=GenericResponse(
+                        success=True,
+                        requested_at=datetime.now(timezone.utc)
+                    )
+                )
+            )
+            
+        return payload
+    
         
     async def assign_class_section_professor(
         self,
@@ -779,7 +999,7 @@ class AcademicStructureService:
         requested_by: str
     ) -> List[ProfessorClassSectionResponseSchema]:
         """
-            Register one professor to multiple class section at the same request
+             one professor to multiple class section at the same request
             Assign professor to multiple class sections
             - Professor must be ACTIVE
             - No duplicate assignment (handled by UniqueConstraint)
@@ -857,7 +1077,7 @@ class AcademicStructureService:
     # CLASS SCHEDULING VALIDATION METHODS
     # -------------------------------
     async def validate_time_logic(self, start_time: time, end_time: time):
-        #Validate time logic (start < end) (start < other_end) AND (end > other_start)
+        # Validate time logic (start < end) (start < other_end) AND (end > other_start)
         if start_time >= end_time:
             raise InvalidRequestException("Start time must be before end time")
     
@@ -977,4 +1197,30 @@ class AcademicStructureService:
         )
         
         return response
+    
+    
+    async def list_class_schedule_by_section(self, class_section_id: str) -> List[ClassScheduleResponseSchema]:
+        payload: List[dict] = []
+        class_schedules: List[ClassSchedule] = await self.class_schedule_repo.list_class_schedule_by_section(
+            class_section_id
+        )
+        
+        for class_schedule in class_schedules:
+            payload.append(
+                ClassScheduleResponseSchema(
+                    id=class_schedule.id,
+                    created_at=class_schedule.created_at,
+                    class_section_id=class_schedule.class_section_id,
+                    room_id=class_schedule.room_id,
+                    day_of_week=class_schedule.day_of_week, 
+                    start_time=class_schedule.start_time,
+                    end_time=class_schedule.end_time,
+                    request_log=GenericResponse(
+                        success=True,
+                        requested_at=datetime.now(timezone.utc)
+                    )
+                )
+            )
+            
+        return payload
     

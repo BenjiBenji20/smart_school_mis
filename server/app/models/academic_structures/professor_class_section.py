@@ -23,8 +23,16 @@ class ProfessorClassSection(Base):
     professor_id = Column(String(36), ForeignKey("professor.id"), nullable=False)
     class_section_id = Column(String(36), ForeignKey("class_section.id"), nullable=False)
     
-    professor = relationship("Professor", back_populates="class_section_links")
-    class_section = relationship("ClassSection", back_populates="professor_links")
+    professor = relationship(
+        "Professor", 
+        back_populates="class_section_links"
+    )
+    
+    
+    class_section = relationship(
+        "ClassSection", 
+        back_populates="professor_links"
+    )
 
     # the same professor cannot be assigned to the same class section
     __table_args__ = (

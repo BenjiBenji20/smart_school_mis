@@ -2,6 +2,7 @@
     Date Written: 12/26/2025 at 9:15 PM
 """
 
+from typing import List
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
@@ -15,9 +16,17 @@ class RoomRepository(BaseRepository[Room]):
         super().__init__(Room, db)
         
         
-    async def get_existing_ids(self, room_ids: set[str]) -> list[str]:
+    async def get_existing_ids(self, room_ids: set[str]) -> List[str]:
         stmt = select(Room.id).where(Room.id.in_(room_ids))
         result = await self.db.execute(stmt)
         return result.scalars().all()
 
     
+    async def list_rooms_by_building(self, building_id: str) -> List[Room]:
+        stmt = select(Room).where(
+            Room.building_id == building_id
+        )
+        
+        result = await self.db.execute(stmt)
+        return result.scalars().all()
+        
