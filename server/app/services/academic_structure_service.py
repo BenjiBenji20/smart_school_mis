@@ -23,6 +23,7 @@ from app.repository.academic_structures.course_offering_repository import Course
 from app.repository.academic_structures.class_section_repository import ClassSectionRepository
 from app.repository.academic_structures.professor_class_section_repository import ProfessorClassSectionRepository
 from app.repository.academic_structures.class_schedule_repository import ClassScheduleRepository
+from app.repository.users.professor_repository import ProfessorRepository
 
 from app.models.academic_structures.term import Term
 from app.models.academic_structures.course_offering import CourseOffering
@@ -35,6 +36,7 @@ from app.models.academic_structures.program import Program
 from app.models.academic_structures.curriculum_course import CurriculumCourse
 from app.models.academic_structures.course import Course
 from app.models.academic_structures.class_section import ClassSection
+from app.models.users.professor import Professor
 
 
 class AcademicStructureService:
@@ -82,7 +84,11 @@ class AcademicStructureService:
         self.class_section_repo = ClassSectionRepository(db)
         self.prof_class_section_repo = ProfessorClassSectionRepository(db)
         self.class_schedule_repo = ClassScheduleRepository(db)
-        
+        self.professor_repo = ProfessorRepository(db)
+    
+    # ==============================================
+    # BUILDING SERVICE METHODS
+    # ==============================================      
     async def register_building(
         self,
         building: BuildingRequestSchema,
@@ -138,6 +144,41 @@ class AcademicStructureService:
             
         return payload        
         
+    
+    # ==============================================
+    # ROOM SERVICE METHODS
+    # ==============================================  
+    async def format_room_response(
+        self, rooms: List[Room], requested_by: str = None
+    ) -> List[RoomResponseSchema]:
+        response: List[RoomResponseSchema] = []
+        
+        for room in rooms:
+            building: Building = await self.building_repo.get_by_id(room.building_id)
+            if building:
+                response.append(
+                    RoomResponseSchema(
+                        id=str(room.id),
+                        created_at=room.created_at,
+                        room_code=room.room_code,
+                        building_details=BuildingResponseSchema(
+                            id=building.id,
+                            created_at=building.created_at,
+                            name=building.name,
+                            room_capacity=building.room_capacity    
+                        ),
+                        request_log=GenericResponse(
+                            success=True,
+                            requested_at=datetime.now(timezone.utc),
+                            requested_by=requested_by,
+                            description=f"Register room {room.room_code}"
+                        )
+                    )
+                )
+            
+
+        return response
+    
         
     async def register_room(
         self,
@@ -158,54 +199,28 @@ class AcademicStructureService:
             payload.append(data)
             
         # register rooms all at once
-        registered_rooms = await self.room_repo.create_many(payload)
+        registered_rooms: List[Room] = await self.room_repo.create_many(payload)
         
         if registered_rooms is None:
             raise UnprocessibleContentException(
                 "Room registration failed. Try again."
             )
         
-        response: List[RoomResponseSchema] = []
-        
-        for room in registered_rooms:
-            response.append(
-                RoomResponseSchema(
-                    id=str(room.id),
-                    created_at=room.created_at,
-                    room_code=room.room_code,
-                    building_id=room.building_id,
-                    request_log=GenericResponse(
-                        success=True,
-                        requested_at=datetime.now(timezone.utc),
-                        requested_by=requested_by,
-                        description=f"Register room {room.room_code}"
-                    )
-                )
-            )
-
-        return response
+        return await self.format_room_response(requested_by=requested_by, rooms=registered_rooms)
         
         
     async def list_rooms_by_building(self, building_id: str) -> List[RoomResponseSchema]:
-        payload: List[dict] = []
         rooms: List[Room] = await self.room_repo.list_rooms_by_building(building_id)
-        for room in rooms:
-            payload.append(
-                RoomResponseSchema(
-                    id=room.id,
-                    created_at=room.created_at,
-                    room_code=room.room_code,
-                    building_id=room.building_id,
-                    request_log=GenericResponse(
-                        success=True,
-                        requested_at=datetime.now(timezone.utc)
-                    )
-                )
-            )
-            
-        return payload
         
+        if rooms is None:
+            return []
         
+        return await self.format_room_response(rooms=rooms)
+        
+    
+    # ==============================================
+    # DEPARTMENT SERVICE METHODS
+    # ==============================================  
     async def register_department(
         self,
         department: DepartmentRequestSchema,
@@ -298,6 +313,43 @@ class AcademicStructureService:
                 description=f"Department successfully assigned to building {building.name}."
             )
         
+      
+    # ==============================================
+    # PROGRAM SERVICE METHODS
+    # ==============================================  
+    async def format_program_response(
+        self, programs: List[Program], requested_by: str = None, 
+    ) -> List[ProgramResponseSchema]:
+        response: List[ProgramResponseSchema] = []
+        
+        for program in programs:
+            department: Department = await self.department_repo.get_by_id(program.department_id)
+            if department:
+                response.append(
+                    ProgramResponseSchema(
+                        id=str(program.id),
+                        created_at=program.created_at,
+                        title=program.title,
+                        program_code=program.program_code,
+                        description=program.description,
+                        department_details=DepartmentResponseSchema(
+                            id=department.id,
+                            created_at=department.created_at,
+                            title=department.title,
+                            department_code=department.department_code,
+                            description=department.description
+                        ),
+                        request_log=GenericResponse(
+                            success=True,
+                            requested_at=datetime.now(timezone.utc),
+                            requested_by=requested_by,
+                            description=f"Register program {program.title}"
+                        )
+                    )
+                )
+
+        return response
+    
         
     async def register_program(
         self, 
@@ -325,49 +377,61 @@ class AcademicStructureService:
                 "Program registration failed. Try again."
             )
         
-        response: List[ProgramResponseSchema] = []
-        
-        for program in registered_programs:
-            response.append(
-                ProgramResponseSchema(
-                    id=str(program.id),
-                    created_at=program.created_at,
-                    title=program.title,
-                    program_code=program.program_code,
-                    description=program.description,
-                    department_id=program.department_id,
-                    request_log=GenericResponse(
-                        success=True,
-                        requested_at=datetime.now(timezone.utc),
-                        requested_by=requested_by,
-                        description=f"Register program {program.title}"
-                    )
-                )
-            )
-
-        return response
+        return await self.format_program_response(programs=registered_programs, requested_by=requested_by)            
     
     
     async def list_programs_by_department(self, department_id: str) -> List[ProgramResponseSchema]:
-        payload: List[dict] = []
         programs: List[Program] = await self.program_repo.list_programs_by_department(department_id)
-        for program in programs:
-            payload.append(
-                ProgramResponseSchema(
-                    id=program.id,
-                    created_at=program.created_at,
-                    title=program.title,
-                    program_code=program.program_code,
-                    description=program.description,
-                    department_id=program.department_id,
-                    request_log=GenericResponse(
-                        success=True,
-                        requested_at=datetime.now(timezone.utc)
-                    )
-                )
+        if programs is None:
+            return []
+        
+        return await self.format_program_response(programs)
+    
+    
+    # ==============================================
+    # CURRICULUM SERVICE METHODS
+    # ============================================== 
+    async def format_curriculum_response(
+        self, program_id: str, curriculum: Curriculum, requested_by: str = None
+    ) -> CurriculumResponseSchema:
+        program: Program = await self.program_repo.get_by_id(program_id)
+        if program is None:
+            raise InvalidRequestException(
+                f"Curriculum registration failed. Program id {program_id} not found."
             )
             
-        return payload
+        department: Department = await self.department_repo.get_by_id(program.department_id)
+        if department is None:
+            raise ResourceNotFoundException(f"Department from {program.title} not found.")
+        
+        return CurriculumResponseSchema(
+            id=curriculum.id,
+            created_at=curriculum.created_at,
+            title=curriculum.title,
+            effective_from=curriculum.effective_from,
+            effective_to=curriculum.effective_to,
+            status=curriculum.status,
+            program_details=ProgramResponseSchema(
+                id=program.id,
+                created_at=program.created_at,
+                title=program.title,
+                program_code=program.program_code,
+                description=program.description,
+                department_details=DepartmentResponseSchema(
+                    id=department.id,
+                    created_at=department.created_at,
+                    title=department.title,
+                    department_code=department.department_code,
+                    description=department.description,
+                )
+            ),
+            request_log=GenericResponse(
+                success=True,
+                requested_at=datetime.now(timezone.utc),
+                requested_by=requested_by,
+                description=f"Register curriculum {curriculum.title}"
+            )
+        )
     
     
     async def register_curriculum(
@@ -392,20 +456,11 @@ class AcademicStructureService:
             program_id = curriculum_dict["program_id"]
         )
         
-        return CurriculumResponseSchema(
-            id=register_curriculum.id,
-            created_at=register_curriculum.created_at,
-            title=register_curriculum.title,
-            effective_from=register_curriculum.effective_from,
-            effective_to=register_curriculum.effective_to,
-            status=register_curriculum.status,
-            program_id=register_curriculum.program_id,
-            request_log=GenericResponse(
-                success=True,
-                requested_at=datetime.now(timezone.utc),
-                requested_by=requested_by,
-                description=f"Register curriculum {register_curriculum.title}"
-            )
+        if curriculum is None:
+            raise InvalidRequestException(f"Curriculum {curriculum_dict['curriculum_title']} registration failed.")
+        
+        return await self.format_curriculum_response(
+            program_id=curriculum_dict["program_id"], curriculum=register_curriculum, requested_by=requested_by
         )
     
     
@@ -452,28 +507,21 @@ class AcademicStructureService:
     
     
     async def list_curriculums_by_program(self, program_id: str) -> List[CurriculumResponseSchema]:
-        payload: List[dict] = []
+        response: List[dict] = []
         curriculums: List[Curriculum] = await self.curriculum_repo.list_curriculums_by_program(program_id)
         for curriculum in curriculums:
-            payload.append(
-                CurriculumResponseSchema(
-                    id=curriculum.id,
-                    created_at=curriculum.created_at,
-                    title=curriculum.title,
-                    effective_from=curriculum.effective_from,
-                    effective_to=curriculum.effective_to,
-                    status=curriculum.status,
-                    program_id=curriculum.program_id,
-                    request_log=GenericResponse(
-                        success=True,
-                        requested_at=datetime.now(timezone.utc)
-                    )
+            response.append(
+                await self.format_curriculum_response(
+                    program_id=curriculum.program_id, curriculum=curriculum
                 )
             )
             
-        return payload
+        return response
     
-        
+    
+    # ==============================================
+    # COURSE SERVICE METHODS
+    # ============================================== 
     async def register_course(
         self, 
         courses: List[CourseRequestSchema], 
@@ -550,6 +598,50 @@ class AcademicStructureService:
         return payload
     
     
+    # ==============================================
+    # CURRICULUM COURSE SERVICE METHODS
+    # ============================================== 
+    async def format_curriculum_course_response(
+        self, 
+        curriculum_course: CurriculumCourse, 
+        requested_by: str = None
+    ) -> CurriculumCourseResponseSchema:
+        curriculum: Curriculum = await self.curriculum_repo.get_by_id(curriculum_course.curriculum_id)
+        if curriculum is None:
+            raise ResourceNotFoundException(
+                f"Curriculum course registration failed. Curriculum {curriculum_course.curriculum_id} not found."
+            )
+            
+        course: Course = await self.course_repo.get_by_id(curriculum_course.course_id)
+        if course is None:
+            raise ResourceNotFoundException(
+                f"Curriculum course registration failed. Course {curriculum_course.course_id} not found."
+            )
+        
+        return CurriculumCourseResponseSchema(
+            id=str(curriculum_course.id),
+            created_at=curriculum_course.created_at,
+            year_level=curriculum_course.year_level,
+            semester=curriculum_course.semester,
+            is_required=curriculum_course.is_required,
+            curriculum_details=await self.format_curriculum_response(curriculum.program_id, curriculum),
+            course_details=CourseResponseSchema(
+                id=course.id,
+                created_at=course.created_at,
+                title=course.title,
+                course_code=course.course_code,
+                units=course.units,
+                description=course.description,
+            ),
+            request_log=GenericResponse(
+                success=True,
+                requested_at=datetime.now(timezone.utc),
+                requested_by=requested_by,
+                description=f"Register curriculum course."
+            )
+        )
+    
+    
     async def register_curriculum_course(
         self, 
         curriculum_courses: List[CurriculumCourseRequestSchema], 
@@ -576,29 +668,18 @@ class AcademicStructureService:
             raise UnprocessibleContentException(
                 "Curriculum course registration failed. Try again."
             )
-        
+            
         response: List[CurriculumCourseResponseSchema] = []
         
         for curriculum_course in registered_curriculum_courses:
             response.append(
-                CurriculumCourseResponseSchema(
-                    id=str(curriculum_course.id),
-                    created_at=curriculum_course.created_at,
-                    year_level=curriculum_course.year_level,
-                    semester=curriculum_course.semester,
-                    is_required=curriculum_course.is_required,
-                    curriculum_id=curriculum_course.curriculum_id,
-                    course_id=curriculum_course.course_id,
-                    request_log=GenericResponse(
-                        success=True,
-                        requested_at=datetime.now(timezone.utc),
-                        requested_by=requested_by,
-                        description=f"Register curriculum course."
-                    )
+                await self.format_curriculum_course_response(
+                    curriculum_course=curriculum_course, 
+                    requested_by=requested_by
                 )
             )
-
-        return response
+            
+        return response        
     
     
     async def list_curriculum_course_by_field(
@@ -607,31 +688,30 @@ class AcademicStructureService:
         year_level: int = None,
         semester: int = None
     ) -> List[CurriculumCourseResponseSchema]:
-        payload: List[dict] = []
         curriculum_courses: List[CurriculumCourse] = await self.curriculum_course_repo.list_curriculum_course_by_field(
             curriculum_id=curriculum_id,
             year_level=year_level,
             semester=semester
         )
         
+        if curriculum_courses is None:
+            return []
+        
+        response: List[CurriculumCourseResponseSchema] = []
+        
         for curriculum_course in curriculum_courses:
-            payload.append(
-                CurriculumCourseResponseSchema(
-                    id=curriculum_course.id,
-                    created_at=curriculum_course.created_at,
-                    is_required=curriculum_course.is_required,
-                    curriculum_id=curriculum_course.curriculum_id,
-                    course_id=curriculum_course.course_id,
-                    request_log=GenericResponse(
-                        success=True,
-                        requested_at=datetime.now(timezone.utc)
-                    )
+            response.append(
+                await self.format_curriculum_course_response(
+                    curriculum_course=curriculum_course, 
                 )
             )
-
-        return payload
+            
+        return response 
     
     
+    # ==============================================
+    # TERM SERVICE METHODS
+    # ============================================== 
     async def register_term(
         self, 
         terms: List[TermRequestSchema], 
@@ -799,6 +879,40 @@ class AcademicStructureService:
         return response
     
     
+    # ==============================================
+    # COURSE OFFERING SERVICE METHODS
+    # ==============================================
+    async def format_course_offering_response(
+        self, 
+        course_offering: CourseOffering, 
+        term: Term,
+        curriculum_course_response: CurriculumCourseResponseSchema,
+        requested_by: str = None
+    ) -> CourseOfferingResponseSchema:
+        return CourseOfferingResponseSchema(
+            id=course_offering.id,
+            created_at=course_offering.created_at,
+            curriculum_course_details=curriculum_course_response,
+            term_details=TermResponseSchema(
+                id=term.id,
+                created_at=term.created_at,
+                academic_year_start=term.academic_year_start,
+                academic_year_end=term.academic_year_end,
+                enrollment_start=term.enrollment_start,
+                enrollment_end=term.enrollment_end,
+                semester_period=term.semester_period,
+                status=term.status
+            ),
+            status=course_offering.status,
+            request_log=GenericResponse(
+                success=True,
+                requested_at=datetime.now(timezone.utc),
+                requested_by=requested_by,
+                description=f"Register course offering with status {course_offering.status.lower()}"
+            )
+        )
+        
+    
     async def register_course_offering(
         self,
         course_offering: CourseOfferingRequestSchema,
@@ -817,6 +931,22 @@ class AcademicStructureService:
         """
         course_offering_dict = course_offering.model_dump()
         
+        curriculum_course: CurriculumCourse = await self.curriculum_course_repo.get_by_id(
+            course_offering_dict['curriculum_course_id']
+        )
+        if curriculum_course is None:
+            return InvalidRequestException(
+                f"Course offering registration failed due to invalid curriculum course "
+                f"id {course_offering_dict['curriculum_course_id']}."
+            )
+            
+        term: Term = await self.term_repo.get_by_id(course_offering_dict['term_id'])
+        if term is None:
+            return InvalidRequestException(
+                f"Course offering registration failed due to invalid curriculum course "
+                f"id {course_offering_dict['term_id']}."
+            )
+        
         # register course offering
         register_course_offering = await self.course_offering_repo.register_course_offering(
             curriculum_course_id = course_offering_dict["curriculum_course_id"],
@@ -827,36 +957,40 @@ class AcademicStructureService:
         if not register_course_offering:
             raise InvalidRequestException("Registration of course offering failed.")
         
-        return CourseOfferingResponseSchema(
-            id=register_course_offering.id,
-            created_at=register_course_offering.created_at,
-            curriculum_course_id=register_course_offering.curriculum_course_id,
-            term_id=register_course_offering.term_id,
-            status=register_course_offering.status,
-            request_log=GenericResponse(
-                success=True,
-                requested_at=datetime.now(timezone.utc),
-                requested_by=requested_by,
-                description=f"Register course offering with status {register_course_offering.status.lower()}"
-            )
+        curriculum_course_response: CurriculumCourseResponseSchema = await self.format_curriculum_course_response(
+            curriculum_course=curriculum_course
+        )
+        
+        return await self.format_course_offering_response(
+            course_offering=register_course_offering,
+            term=term,
+            curriculum_course_response=curriculum_course_response,
+            requested_by=requested_by
         )
 
 
     async def list_course_offering_by_term(self, term_id: str) -> List[CourseOfferingResponseSchema]:
         payload: List[dict] = []
-        course_offerings = await self.course_offering_repo.list_course_offering_by_term(term_id)
+        course_offerings: List[CourseOffering] = await self.course_offering_repo.list_course_offering_by_term(term_id)
         for course_offering in course_offerings:
+            term: Term = await self.term_repo.get_by_id(course_offering.term_id)
+            
+            curriculum_course: CurriculumCourse = await self.curriculum_course_repo.get_by_id(
+                course_offering.curriculum_course_id
+            )
+            
+            if curriculum_course is None:
+                raise InvalidRequestException("Request failed due to curriculum course issue.")
+            
+            curriculum_course_response: CurriculumCourseResponseSchema = await self.format_curriculum_course_response(
+                curriculum_course=curriculum_course
+            )
+            
             payload.append(
-                CourseOfferingResponseSchema(
-                    id=course_offering.id,
-                    created_at=course_offering.created_at,
-                    term_id=course_offering.term_id,
-                    curriculum_course_id=course_offering.curriculum_course_id,
-                    status=course_offering.status,
-                    request_log=GenericResponse(
-                        success=True,
-                        requested_at=datetime.now(timezone.utc)
-                    )
+                await self.format_course_offering_response(
+                    course_offering=course_offering,
+                    term=term,
+                    curriculum_course_response=curriculum_course_response,
                 )
             )
             
@@ -904,7 +1038,108 @@ class AcademicStructureService:
                 description=f"Course offering status successfully updated to {status.value.lower()}."
             )
         
+
+    # ==============================================
+    # CLASS SECTION SERVICE METHODS
+    # ==============================================
+    async def format_class_section_response(
+        self, 
+        class_section: ClassSection,
+        course_offering: CourseOffering,
+        requested_by: str = None
+    ) -> ClassSectionResponseSchema:
+        term: Term = await self.term_repo.get_by_id(course_offering.term_id)
+        if term is None:
+            raise InvalidRequestException("Class section registration failed due to term issue.")
         
+        curriculum_course: CurriculumCourse = await self.curriculum_course_repo.get_by_id(
+            course_offering.curriculum_course_id
+        )
+        if curriculum_course is None:
+            raise InvalidRequestException("Class section registration failed due to curriculum course issue.")
+        
+        course: Course = await self.course_repo.get_by_id(curriculum_course.course_id)
+        if course is None:
+            raise InvalidRequestException("Class section registration failed due to course issue.")
+        
+        curriculum: Curriculum = await self.curriculum_repo.get_by_id(curriculum_course.curriculum_id)
+        if curriculum is None:
+            raise InvalidRequestException("Class section registration failed due to curriculum issue.")
+        
+        program: Program = await self.program_repo.get_by_id(curriculum.program_id)
+        if program is None:
+            raise InvalidRequestException("Class section registration failed due to program issue.")
+        
+        department: Department = await self.department_repo.get_by_id(program.department_id)
+        if department is None:
+            raise InvalidRequestException("Class section registration failed due to department issue.")
+        
+        return ClassSectionResponseSchema(
+                id=str(class_section.id),
+                created_at=class_section.created_at,
+                section_code=class_section.section_code,
+                student_capacity=class_section.student_capacity,
+                current_student_cnt=class_section.current_student_cnt,
+                status=class_section.status,
+                course_offering_details=CourseOfferingResponseSchema(
+                    id=course_offering.id,
+                    created_at=course_offering.created_at,
+                    term_details=TermResponseSchema(
+                        id=term.id,
+                        created_at=term.created_at,
+                        academic_year_start=term.academic_year_start, 
+                        academic_year_end=term.academic_year_end,
+                        enrollment_start=term.enrollment_start,
+                        enrollment_end=term.enrollment_end,
+                        semester_period=term.semester_period,
+                        status=term.status
+                    ),
+                    curriculum_course_details=CurriculumCourseResponseSchema(
+                        id=curriculum_course.id,
+                        created_at=curriculum_course.created_at,
+                        is_required=curriculum_course.is_required,
+                        curriculum_details=CurriculumResponseSchema(
+                            id=curriculum.id,
+                            created_at=curriculum.created_at,
+                            title=curriculum.title,
+                            effective_from=curriculum.effective_from,
+                            effective_to=curriculum.effective_to,
+                            status=curriculum.status,
+                            program_details=ProgramResponseSchema(
+                                id=program.id,
+                                created_at=program.created_at,
+                                title=program.title,
+                                program_code=program.program_code,
+                                description=program.description,
+                                department_details=DepartmentResponseSchema(
+                                    id=department.id,
+                                    created_at=department.created_at,
+                                    title=department.title,
+                                    department_code=department.department_code,
+                                    description=department.description
+                                )
+                            )
+                        ),
+                        course_details=CourseResponseSchema(
+                            id=course.id,
+                            created_at=course.created_at,
+                            title=course.title,
+                            course_code=course.course_code,
+                            units=course.units,
+                            description=course.description
+                        )
+                    ),
+                    status=course_offering.status,
+                ),
+                request_log=GenericResponse(
+                    success=True,
+                    requested_at=datetime.now(timezone.utc),
+                    requested_by=requested_by,
+                    description=f"Register class section {class_section.section_code}"
+                )
+            )
+    
+    
     async def register_class_section(
         self,
         class_sections: List[ClassSectionRequestSchema],
@@ -946,20 +1181,10 @@ class AcademicStructureService:
         
         for class_section in registered_class_sections:
             response.append(
-                ClassSectionResponseSchema(
-                    id=str(class_section.id),
-                    created_at=class_section.created_at,
-                    course_offering_id=class_section.course_offering_id,
-                    section_code=class_section.section_code,
-                    student_capacity=class_section.student_capacity,
-                    current_student_cnt=class_section.current_student_cnt,
-                    status=class_section.status,
-                    request_log=GenericResponse(
-                        success=True,
-                        requested_at=datetime.now(timezone.utc),
-                        requested_by=requested_by,
-                        description=f"Register class section {class_section.section_code}"
-                    )
+                await self.format_class_section_response(
+                    class_section=class_section,
+                    course_offering=course_offering,
+                    requested_by=requested_by
                 )
             )
 
@@ -967,37 +1192,38 @@ class AcademicStructureService:
         
     
     async def list_class_sections_by_course_offering(self, course_offering_id: str) -> List[ClassSectionResponseSchema]:
-        payload: List[dict] = []
+        course_offering: CourseOffering = await self.course_offering_repo.get_by_id(course_offering_id)
+        if course_offering is None:
+            raise ResourceNotFoundException(f"Course offering not found.")
+        
         class_sections: List[ClassSection] = await self.class_section_repo.list_class_sections_by_course_offering(
             course_offering_id
         )
         
+        if class_sections is None:
+            return []
+        
+        response: List[dict] = []
         for class_section in class_sections:
-            payload.append(
-                ClassSectionResponseSchema(
-                    id=class_section.id,
-                    created_at=class_section.created_at,
-                    course_offering_id=class_section.course_offering_id,
-                    section_code=class_section.section_code,
-                    student_capacity=class_section.student_capacity,
-                    current_student_cnt=class_section.current_student_cnt,
-                    status=class_section.status,
-                    request_log=GenericResponse(
-                        success=True,
-                        requested_at=datetime.now(timezone.utc)
-                    )
+            response.append(
+                await self.format_class_section_response(
+                    class_section=class_section,
+                    course_offering=course_offering,
                 )
             )
             
-        return payload
+        return response
     
-        
+
+    # ==============================================
+    # PROFESSOR CLASS SECTION SERVICE METHODS
+    # ==============================================
     async def assign_class_section_professor(
         self,
         prof_id: str,
         class_section_ids: List[str],
         requested_by: str
-    ) -> List[ProfessorClassSectionResponseSchema]:
+    ) -> List[ProfessorClassSectionFormattedResponseSchema]:
         """
              one professor to multiple class section at the same request
             Assign professor to multiple class sections
@@ -1016,6 +1242,10 @@ class AcademicStructureService:
                 raise InvalidRequestException(
                     f"Invalid professor assignment due to class section status {class_section.status.lower()}."
                 )
+        
+        professor: Professor = await self.professor_repo.get_professor_by_id(prof_id)
+        if professor is None:
+            raise ResourceNotFoundException(f"Professor class section assignment failed due to professor not found.")
         
         # Create assignments in repository
         assignments = await self.prof_class_section_repo.assign_professor_class_section(
@@ -1040,27 +1270,57 @@ class AcademicStructureService:
         response: List[ProfessorClassSectionResponseSchema] = []
         
         for assignment in detailed_assignments:
+            course_offering: CourseOffering = await self.course_offering_repo.get_by_id(
+                assignment.course_offering_id
+            )
+            
+            term: Term = await self.term_repo.get_by_id(course_offering.term_id)
+            
+            curriculum_course: CurriculumCourse = await self.curriculum_course_repo.get_by_id(
+                course_offering.curriculum_course_id
+            )
+            curriculum_course_response: CurriculumCourseResponseSchema = await self.format_curriculum_course_response(
+                curriculum_course=curriculum_course
+            )
+            
+            course_offering_response: CourseOfferingResponseSchema = await self.format_course_offering_response(
+                course_offering=course_offering,
+                term=term,
+                curriculum_course_response=curriculum_course_response
+            )
+            
+            class_section = await self.class_section_repo.get_by_id(
+                assignment.class_section_id
+            )
+            
+            class_section_response: ClassSectionResponseSchema = await self.format_class_section_response(
+                    class_section=class_section,
+                    course_offering=course_offering
+                )
+            
             response.append(
-                ProfessorClassSectionResponseSchema(
+                ProfessorClassSectionFormattedResponseSchema(
                     id=assignment.id,
                     created_at=assignment.created_at,
-                    course_offering_id=assignment.course_offering_id,
-                    
-                    professor_id=assignment.professor_id,
+                    professor_details=BaseUserResponseSchema(
+                        id=professor.id,
+                        created_at=professor.created_at,
+                        first_name=professor.first_name,
+                        middle_name=professor.middle_name,
+                        last_name=professor.last_name,
+                        suffix=professor.suffix,
+                        age=professor.age,
+                        gender=professor.gender,
+                        complete_address=professor.complete_address,
+                        email=professor.email,
+                        cellphone_number=professor.cellphone_number,
+                        role=professor.role,
+                        is_active=professor.is_active,
+                    ),
                     professor_status=assignment.professor_status,
-                    first_name=assignment.first_name,
-                    middle_name=assignment.middle_name,
-                    last_name=assignment.last_name,
-                    suffix=assignment.suffix,
                     university_code=assignment.university_code,
-                    
-                    class_section_id=assignment.class_section_id,
-                    section_code=assignment.section_code,
-                    room_number=assignment.room_number,
-                    student_capacity=assignment.student_capacity,
-                    time_schedule=assignment.time_schedule,
-                    class_section_status=assignment.class_section_status,
-                    
+                    course_offering_details=course_offering_response,
+                    class_section_details=class_section_response,
                     request_log=GenericResponse(
                         success=True,
                         requested_at=datetime.now(timezone.utc),
@@ -1073,9 +1333,9 @@ class AcademicStructureService:
         return response
         
     
-    # -------------------------------
-    # CLASS SCHEDULING VALIDATION METHODS
-    # -------------------------------
+    # ==============================================
+    # CLASS SCHEDULE SERVICE METHODS
+    # ==============================================
     async def validate_time_logic(self, start_time: time, end_time: time):
         # Validate time logic (start < end) (start < other_end) AND (end > other_start)
         if start_time >= end_time:
@@ -1100,22 +1360,6 @@ class AcademicStructureService:
                 raise InvalidRequestException(
                     f"Professor {professor_id} has a schedule conflict from {sched.start_time} to {sched.end_time}"
                 )
-    
-    async def validate_class_section_status(self, class_section_id: str):
-        class_section = await self.class_section_repo.get_by_id(class_section_id)
-        if class_section.status != ClassSectionStatus.OPEN:
-            raise InvalidRequestException(
-                f"Invalid request. Class section {class_section.status} currently not open."
-            )
-            
-    async def validate_course_offering_status(self, class_section_id: str):
-        course_offering = await self.course_offering_repo.get_course_offering(class_section_id)
-        if course_offering.status != CourseOfferingStatus.APPROVED:
-            raise InvalidRequestException(
-                f"Invalid request. Course offering {course_offering.status} currently not yet approved."
-            )
-        # validate term status
-        await self.validate_term_status(course_offering.term_id)
             
     async def validate_term_status(self, term_id: str):
         term = await self.term_repo.get_by_id(term_id)
@@ -1123,6 +1367,46 @@ class AcademicStructureService:
             raise InvalidRequestException(
                 f"Invalid request. Term {term.status} currently not open."
             )
+    
+    
+    async def format_class_schedule_response(
+        self, class_schedule: ClassSchedule, class_section_response: ClassSectionResponseSchema,
+        requested_by: str = None, description: str = None
+    ) -> ClassScheduleResponseSchema:
+        room: Room = await self.room_repo.get_by_id(class_schedule.room_id)
+        if room is None:
+            raise ResourceNotFoundException("Room not found.")
+        
+        building: Building = await self.building_repo.get_by_id(room.building_id)
+        if building is None:
+            raise ResourceNotFoundException("Building not found.")
+        
+        return ClassScheduleResponseSchema(
+            id=class_schedule.id,
+            created_at=class_schedule.created_at,
+            day_of_week=class_schedule.day_of_week, 
+            start_time=class_schedule.start_time,
+            end_time=class_schedule.end_time,
+            class_section_details=class_section_response,
+            room_details=RoomResponseSchema(
+                id=room.id,
+                created_at=room.created_at,
+                room_code=room.room_code,
+                building_details=BuildingResponseSchema(
+                    id=building.id,
+                    created_at=building.created_at,
+                    name=building.name,
+                    room_capacity=building.room_capacity    
+                )
+            ),
+            request_log=GenericResponse(
+                success=True,
+                requested_at=datetime.now(timezone.utc),
+                requested_by=requested_by,
+                description=description
+            )
+        )
+    
     
     async def assign_schedule_class_section(
         self,
@@ -1160,15 +1444,22 @@ class AcademicStructureService:
             class_schedule.end_time
         )
         
-        # Validate class section status
-        await self.validate_class_section_status(
-            class_schedule.class_section_id
-        )
+        # Validate class section
+        class_section = await self.class_section_repo.get_by_id(class_schedule.class_section_id)
+        if class_section.status != ClassSectionStatus.OPEN:
+            raise InvalidRequestException(
+                f"Invalid request. Class section {class_section.status} currently not open."
+            )
         
-        # Validate course offering and term status
-        await self.validate_course_offering_status(
-            class_schedule.class_section_id
-        )
+        # Validate course offering and term
+        course_offering = await self.course_offering_repo.get_course_offering(class_schedule.class_section_id)
+        if course_offering.status != CourseOfferingStatus.APPROVED:
+            raise InvalidRequestException(
+                f"Invalid request. Course offering {course_offering.status} currently not yet approved."
+            )
+            
+        # validate term status
+        await self.validate_term_status(course_offering.term_id)
         
         # Persist schedule
         new_schedule = await self.class_schedule_repo.create(
@@ -1179,46 +1470,43 @@ class AcademicStructureService:
             end_time=class_schedule.end_time
         )
         
-        # Build response
-        response = ClassScheduleResponseSchema(
-            id=new_schedule.id,
-            created_at=new_schedule.created_at,
-            class_section_id=new_schedule.class_section_id,
-            room_id=new_schedule.room_id,
-            day_of_week=new_schedule.day_of_week,
-            start_time=new_schedule.start_time,
-            end_time=new_schedule.end_time,
-            request_log=GenericResponse(
-                success=True,
-                requested_at=datetime.now(timezone.utc),
-                requested_by=requested_by,
-                description="Schedule assigned successfully"
-            )
+        # format class section response
+        class_section_response: ClassSectionResponseSchema = await self.format_class_section_response(
+            class_section=class_section, course_offering=course_offering
         )
         
-        return response
+        # Build response
+        return await self.format_class_schedule_response(
+            class_schedule=new_schedule, class_section_response=class_section_response,
+            requested_by=requested_by, description="Schedule assigned successfully"
+        )
     
     
     async def list_class_schedule_by_section(self, class_section_id: str) -> List[ClassScheduleResponseSchema]:
-        payload: List[dict] = []
+        class_section: ClassSection = await self.class_section_repo.get_by_id(class_section_id)
+        if class_section is None:
+            raise ResourceNotFoundException(f"Class section not found with id {class_section_id}.")
+        
+        course_offering: CourseOffering = await self.course_offering_repo.get_by_id(
+            class_section.course_offering_id
+        )
+        class_section_response: ClassSectionResponseSchema = await self.format_class_section_response(
+            class_section=class_section, course_offering=course_offering
+        )
+        
         class_schedules: List[ClassSchedule] = await self.class_schedule_repo.list_class_schedule_by_section(
             class_section_id
         )
+
+        if class_schedules is None:
+            return []
         
+        payload: List[dict] = []
         for class_schedule in class_schedules:
             payload.append(
-                ClassScheduleResponseSchema(
-                    id=class_schedule.id,
-                    created_at=class_schedule.created_at,
-                    class_section_id=class_schedule.class_section_id,
-                    room_id=class_schedule.room_id,
-                    day_of_week=class_schedule.day_of_week, 
-                    start_time=class_schedule.start_time,
-                    end_time=class_schedule.end_time,
-                    request_log=GenericResponse(
-                        success=True,
-                        requested_at=datetime.now(timezone.utc)
-                    )
+                await self.format_class_schedule_response(
+                    class_schedule=class_schedule, 
+                    class_section_response=class_section_response
                 )
             )
             

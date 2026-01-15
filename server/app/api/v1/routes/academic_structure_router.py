@@ -420,7 +420,7 @@ async def register_class_section(
 
 @academic_structure_router.post(
     "/assign/professor/class-section",
-    response_model=List[ProfessorClassSectionResponseSchema]
+    response_model=List[ProfessorClassSectionFormattedResponseSchema]
 )
 async def assign_class_section_professor(
     request: ProfessorClassSectionRequestSchema,

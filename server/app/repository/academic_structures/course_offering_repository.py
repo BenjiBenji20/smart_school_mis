@@ -16,6 +16,7 @@ from app.repository.academic_structures.term_repository import TermRepository
 
 from app.exceptions.customed_exception import *
 from app.models.academic_structures.class_section import ClassSection
+from app.models.academic_structures.term import Term
 
 
 class CourseOfferingRepository(BaseRepository[CourseOffering]):
@@ -58,7 +59,7 @@ class CourseOfferingRepository(BaseRepository[CourseOffering]):
 
         # find the term status
         # first, get the term object using the param: term_id
-        term = await self.term_repo.get_by_id(term_id)
+        term: Term = await self.term_repo.get_by_id(term_id)
         
         if not term:
             raise ResourceNotFoundException(f"Term course not found with id: {term_id}")
@@ -66,7 +67,7 @@ class CourseOfferingRepository(BaseRepository[CourseOffering]):
         # second, validate term status
         if term.status != TermStatus.OPEN:
             raise InvalidRequestException(
-                f"Registration of course offering failed due to term status {term.status}"
+                f"Registration of course offering failed due to term status {term.status.value}."
             )
             
         instance = CourseOffering(

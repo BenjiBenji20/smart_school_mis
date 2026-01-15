@@ -105,9 +105,8 @@ class ProfessorClassSectionRepository(BaseRepository[ProfessorClassSection]):
                 BaseUser.suffix.label("suffix"),
                 BaseUser.university_code.label("university_code"),
                 ClassSection.section_code.label("section_code"),
-                ClassSection.room_number.label("room_number"),
                 ClassSection.student_capacity.label("student_capacity"),
-                ClassSection.time_schedule.label("time_schedule"),
+                ClassSection.current_student_cnt.label("current_student_cnt"),
                 ClassSection.status.label("class_section_status"),
                 ClassSection.course_offering_id.label("course_offering_id")
             ).join(
