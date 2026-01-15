@@ -1,3 +1,7 @@
+/**
+ * Date Written: 1/15/2026 at 9:29 AM
+ */
+
 import { UserGender, type UserRole, type UserStatus } from "./user_state.types";
 
 // Base Response 
@@ -39,6 +43,15 @@ export interface BaseUserRequest {
 export interface CredentialValidator {
     email: string;
     password: string;
+}
+
+// Registration Passwords for 2 different users
+export interface RegistrationFormData extends Omit<BaseUserRequest, 'role'> {
+  confirmPassword: string;
+}
+
+export interface EmployeeRegistrationFormData extends BaseUserRequest {
+  confirmPassword: string;
 }
 
 // Student Response 

@@ -1,12 +1,24 @@
 import './components/FaceVerification'
 import './App.css'
-import { FaceVerification } from './components/FaceVerification'
+import { Toaster } from 'sonner'
+import { Routes, Route } from 'react-router'
+
+import EmployeeRegistrationPage from './pages/EmployeeRegistrationPage'
+import StudentRegistrationPage from './pages/StudentRegistrationPage'
+
 
 function App() {
-
     return (
         <>
-            <FaceVerification />
+            <Routes>
+                <Route>
+                    {/* PUBLIC ROUTES */}
+                    <Route path="/register/employee" element={<EmployeeRegistrationPage />} />
+                    <Route path="/register/student" element={<StudentRegistrationPage />} />
+
+                </Route>
+            </Routes>
+            <Toaster />
         </>
     )
 }

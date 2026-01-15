@@ -1,3 +1,7 @@
+/**
+ * Date Written: 1/15/2026 at 9:29 AM
+ */
+
 import axios, { type AxiosInstance, type InternalAxiosRequestConfig } from 'axios';
 import { AuthCredentialValidator, type CredentialValidator } from '@/types/authentication.types';
 import { BaseUserRequestValidator, type BaseUserRequest } from "@/types/authentication.types";
