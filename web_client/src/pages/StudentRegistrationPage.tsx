@@ -8,9 +8,11 @@ import { StudentAccountInfoStep } from '@/components/registration/forms/steps/St
 import { type RegistrationFormData } from '@/types/authentication.types';
 import { register } from '@/api/v1/authentication_api';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router';
 
 export default function StudentRegistrationPage() {
     const [isLoading, setIsLoading] = useState(false);
+    const navigate = useNavigate();
 
     const handleSubmit = async (data: Omit<RegistrationFormData, "confirmPassword">) => {
         setIsLoading(true);
@@ -21,14 +23,16 @@ export default function StudentRegistrationPage() {
                 role: 'Student' as const
             };
 
-            await register(studentData);
+            const response = await register(studentData);
 
             toast.success("Registration Successful!", {
                 description: "Your student account has been created. Please check your email for verification.",
             });
 
-            // Redirect to login or dashboard
-            // router.push('/login');
+            // Redirect to success page
+            navigate("/register/success", {
+                state: { user: response }  
+            });
         } catch (error: unknown) {
             const errorMessage = error instanceof Error ? error.message : "An error occurred. Please try again.";
 

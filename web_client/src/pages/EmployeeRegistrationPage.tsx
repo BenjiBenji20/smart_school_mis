@@ -9,9 +9,11 @@ import { type EmployeeRegistrationFormData } from '@/types/authentication.types'
 import { register } from '@/api/v1/authentication_api';
 import { toast } from 'sonner';
 import type { UserRole } from '@/types/user_state.types';
+import { useNavigate } from 'react-router';
 
 export default function EmployeeRegistrationPage() {
     const [isLoading, setIsLoading] = useState(false);
+    const navigate = useNavigate();
 
     const handleSubmit = async (data: Omit<EmployeeRegistrationFormData, 'confirmPassword'>) => {
         // Validate role is selected
@@ -24,14 +26,16 @@ export default function EmployeeRegistrationPage() {
 
         setIsLoading(true);
         try {
-            await register(data);
+            const response = await register(data);
 
             toast.success("Registration Successful!", {
                 description: "Your employee account has been created. An administrator will review your registration.",
             });
 
-            // Redirect to login or dashboard
-            // router.push('/login');
+            // Redirect to success page
+            navigate("/register/success", {
+                state: { user: response }  
+            });
         } catch (error: unknown) {
             const errorMessage =
                 error instanceof Object &&
@@ -64,10 +68,10 @@ export default function EmployeeRegistrationPage() {
                         password: '',
                         confirmPassword: '',
                         role: undefined
-                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                    }} onChange={function (field: 'confirmPassword' | 'email' | 'cellphone_number' | 'password' | 'role', value: string | UserRole): void {
+                        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                    }} onChange={function (_field: 'confirmPassword' | 'email' | 'cellphone_number' | 'password' | 'role', _value: string | UserRole): void {
                         throw new Error('Function not implemented.');
-                    } } />}
+                    }} />}
                     onSubmit={(data) => handleSubmit(data as Omit<EmployeeRegistrationFormData, 'confirmPassword'>)}
                     isLoading={isLoading}
                     stepLabels={["Personal Information", "Employee Account"]}
