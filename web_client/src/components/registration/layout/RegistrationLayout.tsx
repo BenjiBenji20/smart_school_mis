@@ -24,7 +24,7 @@ export function RegistrationLayout({
                     <RegistrationImageSection />
                 </div>
                 {/* Right Form Section - Takes the other half */}
-                <div className="flex-1 lg:ml-[60%] flex flex-col">
+                <div className="flex-1 lg:ml-[50%] flex flex-col">
 
                     {/* Mobile Header - Only shown on small screens */}
                     <div className="lg:hidden py-8 px-6 text-center bg-background">

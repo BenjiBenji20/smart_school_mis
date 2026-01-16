@@ -120,7 +120,7 @@ export function BaseRegistrationForm({
 
     return (
         <div className="w-full space-y-6">
-            <div className="space-y-2">
+            <div className="space-y-2 text-center">
                 <h2 className="text-3xl font-bold text-foreground">{title}</h2>
                 <p className="text-muted-foreground">
                     Please provide your information to register
