@@ -8,16 +8,12 @@ import { RegistrationImageSection } from './RegistrationImageSection';
 interface RegistrationLayoutProps {
     children: React.ReactNode;
     className?: string;
-    title?: string;
-    subtitle?: string;
     showFooter?: boolean;
 }
 
 export function RegistrationLayout({
     children,
     className,
-    title,
-    subtitle,
     showFooter = true,
 }: RegistrationLayoutProps) {
     return (

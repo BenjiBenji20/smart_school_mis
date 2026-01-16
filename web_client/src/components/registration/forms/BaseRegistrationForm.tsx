@@ -14,6 +14,7 @@ interface BaseRegistrationFormProps {
     stepLabels?: string[];
     onSubmit: (data: Omit<EmployeeRegistrationFormData, 'confirmPassword'>) => Promise<void>;
     isLoading?: boolean;
+    title?: string;
 }
 
 export function BaseRegistrationForm({
@@ -22,6 +23,7 @@ export function BaseRegistrationForm({
     stepLabels = ["Personal Information", "Account Information"],
     onSubmit,
     isLoading = false,
+    title,
 }: BaseRegistrationFormProps) {
     const [currentStep, setCurrentStep] = useState(0);
     const [formData, setFormData] = useState<EmployeeRegistrationFormData>({
@@ -119,12 +121,11 @@ export function BaseRegistrationForm({
     return (
         <div className="w-full space-y-6">
             <div className="space-y-2">
-                <h2 className="text-3xl font-bold text-foreground">Create Account</h2>
+                <h2 className="text-3xl font-bold text-foreground">{title}</h2>
                 <p className="text-muted-foreground">
                     Please provide your information to register
                 </p>
             </div>
-
             <RegistrationFormSteps
                 currentStep={currentStep}
                 totalSteps={totalSteps}

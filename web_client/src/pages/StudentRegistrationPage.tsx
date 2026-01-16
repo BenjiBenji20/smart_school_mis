@@ -31,7 +31,7 @@ export default function StudentRegistrationPage() {
 
             // Redirect to success page
             navigate("/register/success", {
-                state: { user: response }  
+                state: { user: response }
             });
         } catch (error: unknown) {
             const errorMessage = error instanceof Error ? error.message : "An error occurred. Please try again.";
@@ -64,6 +64,7 @@ export default function StudentRegistrationPage() {
                     accountInfoStep={accountInfoStep}
                     onSubmit={handleSubmit}
                     isLoading={isLoading}
+                    title="Student Account Registration"
                     stepLabels={["Personal Information", "Student Account"]}
                 />
                 <div className="pt-6 border-t text-center">

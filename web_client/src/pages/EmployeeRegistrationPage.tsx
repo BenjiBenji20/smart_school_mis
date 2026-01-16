@@ -56,10 +56,7 @@ export default function EmployeeRegistrationPage() {
     };
 
     return (
-        <RegistrationLayout
-            title="Employee Registration"
-            subtitle="University Official Portal Access"
-        >
+        <RegistrationLayout>
             <div className="w-full space-y-8">
                 <BaseRegistrationForm
                     accountInfoStep={<EmployeeAccountInfoStep data={{
@@ -74,6 +71,7 @@ export default function EmployeeRegistrationPage() {
                     }} />}
                     onSubmit={(data) => handleSubmit(data as Omit<EmployeeRegistrationFormData, 'confirmPassword'>)}
                     isLoading={isLoading}
+                    title="Employee Account Registration"
                     stepLabels={["Personal Information", "Employee Account"]}
                 />
                 <div className="pt-6 border-t text-center">
