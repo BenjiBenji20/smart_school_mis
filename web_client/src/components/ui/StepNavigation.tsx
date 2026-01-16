@@ -14,6 +14,7 @@ interface StepNavigationProps {
     isLoading?: boolean;
     nextButtonLabel?: string;
     backButtonLabel?: string;
+    submitButtonLabel?: string; 
     showBack?: boolean;
 }
 
@@ -26,10 +27,11 @@ export function StepNavigation({
     isLoading = false,
     nextButtonLabel = "Next Step",
     backButtonLabel = "Back",
+    submitButtonLabel = "Create Account", 
     showBack = true,
 }: StepNavigationProps) {
     const isLastStep = currentStep === totalSteps - 1;
-    
+
     return (
         <div className={cn(
             "flex items-center gap-4 pt-6 w-full",
@@ -47,7 +49,7 @@ export function StepNavigation({
                     {backButtonLabel}
                 </Button>
             )}
-            
+
             <Button
                 type="button"
                 onClick={onNext}
@@ -64,7 +66,7 @@ export function StepNavigation({
                     </>
                 ) : (
                     <>
-                        {isLastStep ? 'Create Account' : nextButtonLabel}
+                        {isLastStep ? submitButtonLabel : nextButtonLabel}
                         {!isLastStep && <ArrowRight className="h-4 w-4" />}
                     </>
                 )}

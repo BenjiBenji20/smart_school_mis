@@ -132,7 +132,7 @@ export function BaseRegistrationForm({
                 stepLabels={stepLabels}
             />
 
-            <div className="w-full py-6">
+            <div className="w-full">
                 {currentStep === 0 ? (
                     <PersonalInfoStep
                         data={formData}
@@ -152,6 +152,7 @@ export function BaseRegistrationForm({
                 isNextDisabled={isLoading}
                 isLoading={isLoading}
                 showBack={currentStep > 0}
+                submitButtonLabel="Create Account" 
             />
         </div>
     );

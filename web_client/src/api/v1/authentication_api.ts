@@ -98,7 +98,7 @@ export async function authenticate(credentials: CredentialValidator) {
         AuthCredentialValidator.validate(credentials);
 
         const formData = new URLSearchParams();
-        formData.append('email', credentials.email);
+        formData.append('username', credentials.email);
         formData.append('password', credentials.password);
 
         const response = await axios.post('/api/user/authenticate/token', formData, {
