@@ -2,7 +2,6 @@
  * Date Written: 1/16/2026 at 8:00 PM
  */
 
-
 import React from 'react';
 import {
     Sidebar,
@@ -111,7 +110,8 @@ export function SidebarLayout({
             collapsible="icon"
             className={cn(
                 "border-r border-border bg-card",
-                isCollapsed ? "w-20" : "w-64"
+                "transition-all duration-300",
+                isCollapsed ? "w-24" : "w-64"
             )}
         >
             {/* Collapse Toggle Button */}
@@ -131,7 +131,10 @@ export function SidebarLayout({
             </div>
 
             {/* Header with University Logo and Name */}
-            <SidebarHeader className="border-b border-border p-4">
+            <SidebarHeader className={cn(
+                "border-b border-border",
+                isCollapsed ? "p-2" : "p-4"  // Reduce padding when collapsed
+            )}>
                 <div className="flex items-center gap-3">
                     {/* University Logo */}
                     <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
@@ -158,7 +161,10 @@ export function SidebarLayout({
             </SidebarHeader>
 
             {/* Menu Sections */}
-            <SidebarContent className="flex-1 p-4">
+            <SidebarContent className={cn(
+                "flex-1",
+                isCollapsed ? "p-0" : "p-4"
+            )}>
                 {sections.map((section, index) => (
                     <React.Fragment key={section.title}>
                         <SidebarGroup>

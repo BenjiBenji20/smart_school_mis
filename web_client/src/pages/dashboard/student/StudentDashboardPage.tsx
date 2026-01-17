@@ -2,11 +2,10 @@
  * Date Written: 1/16/2026 at 8:08 PM
  */
 
-import { SidebarLayout } from '../../../components/dashboard/Sidebar/SidebarLayout';
-import { MobileSidebar } from '../../../components/dashboard/Sidebar/MobileSidebar';
 import { sidebarIcons } from '../../../components/dashboard/icon_constants';
-import { SidebarProvider } from '../../../components/ui/sidebar';
 import cmuLogo from '@/assets/cmu-logo.png'
+import type { BaseUserResponse } from '@/types/authentication.types';
+import { DashboardLayout } from '@/components/layout/DashboarLayout';
 
 // Student menu sections
 const sections = [
@@ -103,42 +102,35 @@ const sections = [
     }
 ];
 
+// Test only
+const user = {
+    id: '2024-84921',
+    created_at: new Date(),
+    first_name: 'Alex',
+    middle_name: 'M.',
+    last_name: 'Rivera',
+    suffix: null,
+    age: 21,
+    gender: 'Male',
+    complete_address: '123 University Ave',
+    email: 'alex.rivera@cityofmalabonuniversity.edu.ph',
+    cellphone_number: '09123456789',
+    role: 'Student',
+    is_active: true,
+} as BaseUserResponse;
+
 export default function StudentDashboardPage() {
-    const handleLogout = () => {
-        console.log('Logging out...');
-        // Implement logout logic
-    };
-
     return (
-        <SidebarProvider >
-            <div className="flex min-h-screen">
-                {/* Desktop Sidebar */}
-                <div className="hidden lg:block">
-                    <SidebarLayout
-                        sections={sections}
-                        universityName="City of Malabon University"
-                        universityLogo={cmuLogo}
-                        onLogout={handleLogout}
-                    />
-                </div>
-
-                {/* Mobile Sidebar Trigger */}
-                <div className="lg:hidden fixed top-4 left-4 z-50">
-                    <MobileSidebar
-                        sections={sections}
-                        universityName="City of Malabon University"
-                        universityLogo={cmuLogo}
-                        onLogout={handleLogout}
-                    />
-                </div>
-
-                {/* Main Content */}
-                <div className="flex-1 p-6">
-                    <h1 className="text-2xl font-bold">Welcome back, Alex!</h1>
-                    {/* Your dashboard content here */}
-                </div>
-            </div>
-        </SidebarProvider>
-
+        <DashboardLayout
+            user={user}
+            sidebarSections={sections}
+            pageTitle="Student Dashboard / Overview"
+            universityLogo={cmuLogo}
+            onLogout={() => console.log('Logout')}
+        >
+            {/* Your dashboard content */}
+            <h1 className="text-2xl font-bold mb-6">Welcome back, Alex!</h1>
+            {/* More content */}
+        </DashboardLayout>
     );
 }
