@@ -3,7 +3,7 @@
  */
 
 import { z } from 'zod';
-import { UserGender } from '@/types/user_state.types';
+import { UserGender } from '@/types/user_state.enums.types';
 
 export const personalInfoSchema = z.object({
     first_name: z.string().min(1, "First name is required"),

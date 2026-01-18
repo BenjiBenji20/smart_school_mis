@@ -8,7 +8,7 @@ import { EmployeeAccountInfoStep } from '@/components/registration/forms/steps/E
 import { type EmployeeRegistrationFormData } from '@/types/authentication.types';
 import { register } from '@/api/v1/authentication_api';
 import { toast } from 'sonner';
-import type { UserRole } from '@/types/user_state.types';
+import type { UserRole } from '@/types/user_state.enums.types';
 import { useNavigate } from 'react-router';
 
 export default function EmployeeRegistrationPage() {

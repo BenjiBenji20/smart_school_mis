@@ -2,7 +2,7 @@
  * Date Written: 1/15/2026 at 9:29 AM
  */
 
-import { UserGender, type UserRole, type UserStatus } from "./user_state.types";
+import { UserGender, type UserRole, type UserStatus } from "./user_state.enums.types";
 
 // Base Response 
 export interface BaseUserResponse {

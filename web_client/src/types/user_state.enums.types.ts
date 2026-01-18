@@ -25,4 +25,3 @@ export const UserGender = {
 } as const;
 
 export type UserGender = typeof UserGender[keyof typeof UserGender];
-

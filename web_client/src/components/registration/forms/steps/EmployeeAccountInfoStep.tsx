@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PasswordInput } from '@/components/registration/forms/PasswordInput';
 import { FormFieldWrapper } from '@/components/registration/forms/FormFieldWrapper';
-import { UserRole } from '@/types/user_state.types';
+import { UserRole } from '@/types/user_state.enums.types';
 
 const EMPLOYEE_ROLES = [
     UserRole.ADMINISTRATOR,
