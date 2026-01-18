@@ -24,6 +24,7 @@ from app.models.academic_structures.course_offering import CourseOffering
 from app.models.academic_structures.class_section import ClassSection
 from app.models.users.student import Student
 from app.models.enrollment_and_gradings.enrollment import Enrollment
+from app.services.academic_structure_service import AcademicStructureService
 
 
 class EnrollmentGradingService:
@@ -45,6 +46,8 @@ class EnrollmentGradingService:
         self.class_section_repo = ClassSectionRepository(db)
         self.student_repo = StudentRepository(db)
         self.enrollment_repo = EnrollmentRepository(db)
+        
+        self.academic_structure_service = AcademicStructureService(db) 
 
 
     async def get_student_allowed_sections(self, student_id: str, requested_by: str) -> List[ClassSectionResponseSchema]:
@@ -56,35 +59,32 @@ class EnrollmentGradingService:
         """
         allowed_sections: List[ClassSection] = await self.student_repo.get_student_allowed_sections(student_id)
         
-        response: List[TermResponseSchema] = []
+        response: List[ClassSectionResponseSchema] = []
         
         for section in allowed_sections:
+            course_offering = await self.course_offering_repo.get_by_id(section.course_offering_id)
+            if course_offering is None:
+                raise InvalidRequestException("Error fetching a list of class sections.")
+
             response.append(
-                ClassSectionResponseSchema(
-                    id=str(section.id),
-                    created_at=section.created_at,
-                    course_offering_id=section.course_offering_id,
-                    section_code=section.section_code,
-                    student_capacity=section.student_capacity,
-                    current_student_cnt=section.current_student_cnt,
-                    status=section.status,
-                    request_log=GenericResponse(
-                        success=True,
-                        requested_at=datetime.now(timezone.utc),
-                        requested_by=requested_by,
-                        description=f"Get allowed sections under student program."
-                    )
+                await self.academic_structure_service.format_class_section_response(
+                    class_section=section,
+                    course_offering=course_offering,
+                    description=f"Fetching a list of available class section {section.section_code}",
+                    error_description="class section list",
+                    requested_by=requested_by
                 )
             )
 
         return response
         
      
-    def format_enrollment_response(
+    async def format_enrollment_response(
         self,
         status: EnrollmentStatus,
         student: Student, 
         class_section: ClassSection,
+        course_offering: CourseOffering,
         term: Term,
         requested_by: str = "",
         description: str = "",
@@ -112,14 +112,9 @@ class EnrollmentGradingService:
                 program_enrolled_date=student.program_enrolled_date,
                 year_level=student.year_level
             ),
-            class_section=ClassSectionResponseSchema(
-                id=str(class_section.id),
-                created_at=class_section.created_at,
-                course_offering_id=class_section.course_offering_id,
-                section_code=class_section.section_code,
-                current_student_cnt=class_section.current_student_cnt,
-                student_capacity=class_section.student_capacity,
-                status=class_section.status
+            class_section_details=await self.academic_structure_service.format_class_section_response(
+                class_section=class_section,
+                course_offering=course_offering
             ),
             term=TermResponseSchema(
                 id=str(term.id),
@@ -231,10 +226,11 @@ class EnrollmentGradingService:
         )
         
         # format and return the enrollment
-        return self.format_enrollment_response(
+        return await self.format_enrollment_response(
             status=enrollment.status,
             student=student,
             class_section=class_section,
+            course_offering=course_offering,
             term=term,
             requested_by=requested_by,
             description="Student enrollment request."
@@ -251,13 +247,15 @@ class EnrollmentGradingService:
         for enrollment in enrollments:
             student: Student = await self.student_repo.get_student_by_id(enrollment.student_id)
             class_section: ClassSection = await self.class_section_repo.get_by_id(enrollment.class_section_id)
+            course_offering: CourseOffering = await self.course_offering_repo.get_by_id(class_section.course_offering_id)
             term: Term = await self.term_repo.get_by_id(enrollment.term_id)
         
             response.append(
-                self.format_enrollment_response(
+                await self.format_enrollment_response(
                     status=enrollment.status,
                     student=student,
                     class_section=class_section,
+                    course_offering=course_offering,
                     term=term,
                     description="Read all student enrollments."
                 )
@@ -285,13 +283,15 @@ class EnrollmentGradingService:
         for enrollment in enrollments:
             student: Student = await self.student_repo.get_student_by_id(enrollment.student_id)
             class_section: ClassSection = await self.class_section_repo.get_by_id(enrollment.class_section_id)
+            course_offering: CourseOffering = await self.course_offering_repo.get_by_id(class_section.course_offering_id)
             term: Term = await self.term_repo.get_by_id(enrollment.term_id)
         
             response.append(
-                self.format_enrollment_response(
+                await self.format_enrollment_response(
                     status=enrollment.status,
                     student=student,
                     class_section=class_section,
+                    course_offering=course_offering,
                     term=term,
                     description="Filter enrollments."
                 )
@@ -318,13 +318,15 @@ class EnrollmentGradingService:
         for enrollment in updated_enrollments_status:
             student: Student = await self.student_repo.get_student_by_id(enrollment.student_id)
             class_section: ClassSection = await self.class_section_repo.get_by_id(enrollment.class_section_id)
+            course_offering: CourseOffering = await self.course_offering_repo.get_by_id(class_section.course_offering_id)
             term: Term = await self.term_repo.get_by_id(enrollment.term_id)
         
             response.append(
-                self.format_enrollment_response(
+                await self.format_enrollment_response(
                     status=enrollment.status,
                     student=student,
                     class_section=class_section,
+                    course_offering=course_offering,
                     term=term,
                     description="Updated enrollment status."
                 )
@@ -340,13 +342,15 @@ class EnrollmentGradingService:
         for enrollment in enrollments:
             student: Student = await self.student_repo.get_student_by_id(enrollment.student_id)
             class_section: ClassSection = await self.class_section_repo.get_by_id(enrollment.class_section_id)
+            course_offering: CourseOffering = await self.course_offering_repo.get_by_id(class_section.course_offering_id)
             term: Term = await self.term_repo.get_by_id(enrollment.term_id)
         
             response.append(
-                self.format_enrollment_response(
+                await self.format_enrollment_response(
                     status=enrollment.status,
                     student=student,
                     class_section=class_section,
+                    course_offering=course_offering,
                     term=term,
                     description="List all the enrollments based on status."
                 )

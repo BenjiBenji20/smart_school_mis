@@ -19,7 +19,7 @@ class UpdateEnrollmentStatusSchema(BaseModel):
 class EnrollmentResponseSchema(BaseModel):
     status: EnrollmentStatus
     student: StudentResponseSchema
-    class_section: ClassSectionResponseSchema
+    class_section_details: ClassSectionResponseSchema
     term: TermResponseSchema
 
     request_log: GenericResponse | None = None

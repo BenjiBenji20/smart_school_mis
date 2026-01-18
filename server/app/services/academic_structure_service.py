@@ -1046,33 +1046,35 @@ class AcademicStructureService:
         self, 
         class_section: ClassSection,
         course_offering: CourseOffering,
+        description: str = None,
+        error_description: str = None,
         requested_by: str = None
     ) -> ClassSectionResponseSchema:
         term: Term = await self.term_repo.get_by_id(course_offering.term_id)
         if term is None:
-            raise InvalidRequestException("Class section registration failed due to term issue.")
+            raise InvalidRequestException(f"Class section {error_description} failed due to term issue.")
         
         curriculum_course: CurriculumCourse = await self.curriculum_course_repo.get_by_id(
             course_offering.curriculum_course_id
         )
         if curriculum_course is None:
-            raise InvalidRequestException("Class section registration failed due to curriculum course issue.")
+            raise InvalidRequestException(f"Class section {error_description} failed due to curriculum course issue.")
         
         course: Course = await self.course_repo.get_by_id(curriculum_course.course_id)
         if course is None:
-            raise InvalidRequestException("Class section registration failed due to course issue.")
+            raise InvalidRequestException(f"Class section {error_description} failed due to course issue.")
         
         curriculum: Curriculum = await self.curriculum_repo.get_by_id(curriculum_course.curriculum_id)
         if curriculum is None:
-            raise InvalidRequestException("Class section registration failed due to curriculum issue.")
+            raise InvalidRequestException(f"Class section {error_description} failed due to curriculum issue.")
         
         program: Program = await self.program_repo.get_by_id(curriculum.program_id)
         if program is None:
-            raise InvalidRequestException("Class section registration failed due to program issue.")
+            raise InvalidRequestException(f"Class section {error_description} failed due to program issue.")
         
         department: Department = await self.department_repo.get_by_id(program.department_id)
         if department is None:
-            raise InvalidRequestException("Class section registration failed due to department issue.")
+            raise InvalidRequestException(f"Class section {error_description} failed due to department issue.")
         
         return ClassSectionResponseSchema(
                 id=str(class_section.id),
@@ -1135,7 +1137,7 @@ class AcademicStructureService:
                     success=True,
                     requested_at=datetime.now(timezone.utc),
                     requested_by=requested_by,
-                    description=f"Register class section {class_section.section_code}"
+                    description=description
                 )
             )
     
@@ -1184,6 +1186,8 @@ class AcademicStructureService:
                 await self.format_class_section_response(
                     class_section=class_section,
                     course_offering=course_offering,
+                    description=f"Register class section {class_section.section_code}",
+                    error_description="registration",
                     requested_by=requested_by
                 )
             )
