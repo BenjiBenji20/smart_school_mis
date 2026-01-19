@@ -2,8 +2,9 @@
     Date Written: 12/28/2025 at 3:39 PM
 """
 
-from typing import List
-from pydantic import BaseModel
+from datetime import datetime, time
+from typing import List, Optional
+from pydantic import BaseModel, Field, field_validator
 
 from app.schemas.generic_schema import GenericResponse
 from app.models.enums.academic_structure_state import *
@@ -23,4 +24,20 @@ class EnrollmentResponseSchema(BaseModel):
     term: TermResponseSchema
 
     request_log: GenericResponse | None = None
+
+
+class AllowedEnrollSectionResponseSchema(BaseModel):
+    class_section_id: str
+    course_code: str
+    title: str
+    units: int
+    section_code: str
+    day_of_week: Optional[int] = None
+    start_time: Optional[time] = None
+    end_time: Optional[time] = None
+    room_code: Optional[str] = None
+    assigned_professor: Optional[str] = None
+    
+    class Config:
+        from_attributes = True
     

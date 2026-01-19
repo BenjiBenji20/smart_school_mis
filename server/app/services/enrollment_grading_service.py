@@ -50,33 +50,28 @@ class EnrollmentGradingService:
         self.academic_structure_service = AcademicStructureService(db) 
 
 
-    async def get_student_allowed_sections(self, student_id: str, requested_by: str) -> List[ClassSectionResponseSchema]:
+    async def get_student_allowed_sections(
+        self, 
+        student_id: str, 
+        requested_by: str
+    ) -> List[AllowedEnrollSectionResponseSchema]:
         """
-            Read all the allowed sections to enroll by the student.
-            Class Sections must be of these followings:
-            - Courses must be under the student's program
-            - Courses must be isn't taken by the student [not sure about this]
+        Read all the allowed sections to enroll by the student.
+        Class Sections must be of these followings:
+        - Courses must be under the student's program
+        - Courses must not be already taken by the student
         """
-        allowed_sections: List[ClassSection] = await self.student_repo.get_student_allowed_sections(student_id)
+        # Use the flattened repo method that returns the data directly
+        allowed_sections: List[AllowedEnrollSectionResponseSchema] = (
+            await self.student_repo.get_student_allowed_sections(student_id)
+        )
         
-        response: List[ClassSectionResponseSchema] = []
-        
-        for section in allowed_sections:
-            course_offering = await self.course_offering_repo.get_by_id(section.course_offering_id)
-            if course_offering is None:
-                raise InvalidRequestException("Error fetching a list of class sections.")
-
-            response.append(
-                await self.academic_structure_service.format_class_section_response(
-                    class_section=section,
-                    course_offering=course_offering,
-                    description=f"Fetching a list of available class section {section.section_code}",
-                    error_description="class section list",
-                    requested_by=requested_by
-                )
+        if not allowed_sections:
+            raise InvalidRequestException(
+                f"No available class sections found for student {student_id}"
             )
-
-        return response
+        
+        return allowed_sections
         
      
     async def format_enrollment_response(

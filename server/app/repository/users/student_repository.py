@@ -3,7 +3,7 @@
 """
 
 from typing import List, Optional
-from sqlalchemy import exists, select
+from sqlalchemy import and_, case, exists, func, select, label
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.repository.base_repository import BaseRepository
@@ -17,6 +17,14 @@ from app.models.academic_structures.curriculum_course import CurriculumCourse
 from app.models.academic_structures.program import Program
 from app.models.enrollment_and_gradings.enrollment import Enrollment
 from app.models.enums.academic_structure_state import CourseOfferingStatus
+from sqlalchemy.orm import aliased
+from app.models.academic_structures.class_schedule import ClassSchedule
+from app.models.academic_structures.course import Course
+from app.models.academic_structures.professor_class_section import ProfessorClassSection
+from app.models.locations.room import Room
+from app.models.users.professor import Professor
+from app.models.users.base_user import BaseUser
+from app.schemas.enrollments_and_gradings_schema import AllowedEnrollSectionResponseSchema
 
 
 class StudentRepository(BaseRepository[Student]):
@@ -44,32 +52,116 @@ class StudentRepository(BaseRepository[Student]):
         )
         return result.scalars().all()
     
-    
-    async def get_student_allowed_sections(self, student_id: str) -> Optional[List[ClassSection]]:
+
+    async def get_student_allowed_sections(
+        self,
+        student_id: str
+    ) -> List[AllowedEnrollSectionResponseSchema]:
         """
             Read all the allowed sections of student.
             Class Sections must be of these followings:
             - Courses must be under the student's program
             - Courses must be isn't taken by the student [not sure about this]
         """
-        # class section -> FK course_offering -> course_offering -> 
-        # FK curriculum_course_id -> curriculum -> FK program <- student
-        stmt = (
-            select(ClassSection)
-            .join(CourseOffering, ClassSection.course_offering_id == CourseOffering.id)
-            .join(CurriculumCourse, CourseOffering.curriculum_course_id == CurriculumCourse.id)
-            .join(Curriculum, CurriculumCourse.curriculum_id == Curriculum.id)
-            .join(Student, Student.program_id == Curriculum.program_id)
-                .where(
-                    Student.id == student_id,
-                    CourseOffering.status == CourseOfferingStatus.APPROVED
+        StudentUser = aliased(BaseUser)
+        ProfessorUser = aliased(BaseUser)
+
+        StudentTbl = aliased(Student)
+        ProfessorTbl = aliased(Professor)
+
+        enrolled_subq = (
+            select(1)
+            .where(
+                and_(
+                    Enrollment.student_id == student_id,
+                    Enrollment.class_section_id == ClassSection.id
                 )
+            )
+            .exists()
+        )
+
+        stmt = (
+            select(
+                Course.course_code,
+                Course.title,
+                Course.units,
+                ClassSection.id.label("class_section_id"),
+                ClassSection.section_code,
+                ClassSchedule.day_of_week,
+                ClassSchedule.start_time,
+                ClassSchedule.end_time,
+                Room.room_code,
+                case(
+                    (
+                        ProfessorUser.middle_name.isnot(None),
+                        func.concat(
+                            ProfessorUser.first_name, ' ',
+                            ProfessorUser.middle_name, ' ',
+                            ProfessorUser.last_name
+                        )
+                    ),
+                    else_=func.concat(
+                        ProfessorUser.first_name, ' ',
+                        ProfessorUser.last_name
+                    )
+                ).label("assigned_professor")
+            )
+            .select_from(Course)
+
+            .join(CurriculumCourse, CurriculumCourse.course_id == Course.id)
+            .join(CourseOffering, CourseOffering.curriculum_course_id == CurriculumCourse.id)
+            .join(ClassSection, ClassSection.course_offering_id == CourseOffering.id)
+
+            # LEFT JOIN
+            .outerjoin(ClassSchedule, ClassSchedule.class_section_id == ClassSection.id)
+            .outerjoin(Room, Room.id == ClassSchedule.room_id)
+
+            .outerjoin(
+                ProfessorClassSection,
+                ProfessorClassSection.class_section_id == ClassSection.id
+            )
+            .outerjoin(ProfessorTbl, ProfessorTbl.id == ProfessorClassSection.professor_id)
+            .outerjoin(ProfessorUser, ProfessorUser.id == ProfessorTbl.id)
+
+            .join(Curriculum, Curriculum.id == CurriculumCourse.curriculum_id)
+            .join(StudentTbl, StudentTbl.program_id == Curriculum.program_id)
+            .join(StudentUser, StudentUser.id == StudentTbl.id)
+
+            .where(
+                and_(
+                    StudentTbl.id == student_id,
+                    CourseOffering.status == CourseOfferingStatus.APPROVED,
+                    ~enrolled_subq
+                )
+            )
+
+            .order_by(
+                Course.course_code,
+                ClassSection.section_code,
+                ClassSchedule.day_of_week,
+                ClassSchedule.start_time
+            )
         )
 
         result = await self.db.execute(stmt)
-        return result.scalars().all()
-    
-    
+
+        return [
+            AllowedEnrollSectionResponseSchema(
+                class_section_id=r.class_section_id,
+                course_code=r.course_code,
+                title=r.title,
+                units=r.units,
+                section_code=r.section_code,
+                day_of_week=r.day_of_week,
+                start_time=r.start_time,
+                end_time=r.end_time,
+                room_code=r.room_code,
+                assigned_professor=r.assigned_professor
+            )
+            for r in result.all()
+        ]
+
+
     async def get_student_current_enrolled_section(self, student_id: str) -> Optional[List[ClassSection]]:
         """
             Get student current enrolled sections

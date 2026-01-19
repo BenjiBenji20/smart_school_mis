@@ -15,11 +15,13 @@ from app.repository.academic_structures.course_repository import CourseRepositor
 from app.repository.academic_structures.term_repository import TermRepository
 from app.repository.academic_structures.class_section_repository import ClassSectionRepository
 from app.repository.users.student_repository import StudentRepository
+from app.repository.academic_structures.course_offering_repository import CourseOfferingRepository
 
 from app.models.academic_structures.term import Term
 from app.models.academic_structures.class_section import ClassSection
 from app.models.users.student import Student
 from app.models.enrollment_and_gradings.enrollment import Enrollment
+from app.models.academic_structures.course_offering import CourseOffering
 
 
 class StudentService:
@@ -34,6 +36,7 @@ class StudentService:
         self.term_repo = TermRepository(db)
         self.class_section_repo = ClassSectionRepository(db)
         self.student_repo = StudentRepository(db)
+        self.course_offering_repo = CourseOfferingRepository(db)
         
         self.enrollment_service = EnrollmentGradingService(db)
 
@@ -44,13 +47,15 @@ class StudentService:
         for enrollment in enrollments:
             student: Student = await self.student_repo.get_student_by_id(enrollment.student_id)
             class_section: ClassSection = await self.class_section_repo.get_by_id(enrollment.class_section_id)
+            course_offering: CourseOffering = await self.course_offering_repo.get_by_id(class_section.course_offering_id)
             term: Term = await self.term_repo.get_by_id(enrollment.term_id)
         
             response.append(
-                self.enrollment_service.format_enrollment_response(
+                await self.enrollment_service.format_enrollment_response(
                     status=enrollment.status,
                     student=student,
                     class_section=class_section,
+                    course_offering=course_offering,
                     term=term,
                     description="Get my enrollments."
                 )

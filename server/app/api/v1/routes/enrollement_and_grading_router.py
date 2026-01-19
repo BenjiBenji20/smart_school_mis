@@ -23,7 +23,7 @@ enrollment_grading_router = APIRouter(
 )
 
 
-@enrollment_grading_router.get("/allowed-sections", response_model=List[ClassSectionResponseSchema])
+@enrollment_grading_router.get("/allowed-sections", response_model=List[AllowedEnrollSectionResponseSchema])
 async def get_allowed_section(
     current_user: Student = Depends(get_current_user),
     db: AsyncSession = Depends(get_async_db),
