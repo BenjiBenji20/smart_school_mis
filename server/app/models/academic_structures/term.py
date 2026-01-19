@@ -5,7 +5,7 @@
 from datetime import datetime, timezone
 import uuid
 
-from sqlalchemy import Column, DateTime, Enum, ForeignKey, SmallInteger, String
+from sqlalchemy import Column, DateTime, Enum, ForeignKey, SmallInteger, String, UniqueConstraint
 from sqlalchemy.orm import relationship
 
 from app.db.base import Base
@@ -43,5 +43,15 @@ class Term(Base):
         "Enrollment",
         back_populates="term",
         uselist=True
+    )
+    
+    
+    # enforce 1 semester period in academic year
+    __table_args__ = (
+        UniqueConstraint(
+            "academic_year_start",
+            "semester_period",
+            name="unique_term_per_year_semester"
+        ),
     )
     
