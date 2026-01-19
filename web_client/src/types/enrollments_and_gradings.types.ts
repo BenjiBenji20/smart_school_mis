@@ -21,3 +21,17 @@ export interface EnrollmentResponse {
     term: TermResponse;
     request_log?: GenericResponse | null;
 }
+
+
+export interface AllowedEnrollSectionResponse {
+    class_section_id: string;
+    course_code: string;
+    title: string;
+    units: number;
+    section_code: string;
+    day_of_week: number | null;
+    start_time: string | null;
+    end_time: string | null;
+    room_code: string | null;
+    assigned_professor: string | null;
+}

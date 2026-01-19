@@ -3,9 +3,9 @@
  */
 
 import securedRequest from './authentication_api';
-import { type ClassSectionResponse } from '@/types/academic_structure.types';
 import { EnrollmentStatus } from '@/types/enrollments_and_gradings.enums.types';
 import type { 
+    AllowedEnrollSectionResponse,
     EnrollmentResponse, 
     UpdateEnrollmentStatus 
 } from '@/types/enrollments_and_gradings.types'
@@ -15,8 +15,8 @@ export const enrollmentApi = {
     /**
      * Get allowed sections for student to enroll
      */
-    async getAllowedSections(): Promise<ClassSectionResponse[]> {
-        const response = await securedRequest.get<ClassSectionResponse[]>(
+    async getAllowedSections(): Promise<AllowedEnrollSectionResponse[]> {
+        const response = await securedRequest.get<AllowedEnrollSectionResponse[]>(
             `/enrollment/allowed-sections`
         );
         return response.data;

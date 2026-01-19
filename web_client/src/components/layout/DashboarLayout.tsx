@@ -9,6 +9,7 @@ import { TopNavigation } from '@/components/layout/TopNavigationLayout';
 import { type BaseUserResponse } from '@/types/authentication.types';
 import { type ReactNode } from 'react';
 import { cn } from '@/lib/utils';
+import React from 'react';
 
 interface DashboardLayoutProps {
     user: BaseUserResponse;
@@ -47,7 +48,7 @@ function DashboardLayoutInner({
 
             {/* Main Content - Responsive margin based on sidebar state */}
             <div className={cn(
-                "w-full transition-all duration-300", 
+                "w-full transition-all duration-300",
                 open ? "lg:ml-64" : "lg:ml-15",
                 "ml-0"
             )}>
@@ -72,7 +73,16 @@ function DashboardLayoutInner({
 
                 {/* Page Content */}
                 <main className="p-4 md:p-6 lg:p-8">
-                    {children}
+                    {/* Clone children and pass isSidebarOpen prop */}
+                    {React.Children.map(children, child => {
+                        if (React.isValidElement(child)) {
+                            return React.cloneElement(child, {
+                                isSidebarOpen: open
+                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                            } as any);
+                        }
+                        return child;
+                    })}
                 </main>
             </div>
         </div>

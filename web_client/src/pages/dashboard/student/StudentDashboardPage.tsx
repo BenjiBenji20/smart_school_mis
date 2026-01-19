@@ -6,6 +6,10 @@ import { sidebarIcons } from '../../../components/dashboard/icon_constants';
 import cmuLogo from '@/assets/cmu-logo.png'
 import type { BaseUserResponse } from '@/types/authentication.types';
 import { DashboardLayout } from '@/components/layout/DashboarLayout';
+import { EnrollmentHeader } from '@/components/StudentEnrollment/EnrollmentHeader';
+import type { TermResponse } from '@/types/academic_structure.types';
+import { EnrollmentTable } from '@/components/StudentEnrollment/EnrollmentTable';
+import { dummyAllowedSections, dummyCurrentTerm } from '@/dummy/dummy_enrollment_data';
 
 // Student menu sections
 const sections = [
@@ -119,6 +123,34 @@ const user = {
     is_active: true,
 } as BaseUserResponse;
 
+interface StudentDashboardPageProps {
+    isSidebarOpen?: boolean; // This will be injected by DashboardLayout
+}
+
+function StudentDashboardPageContent({ isSidebarOpen = true }: StudentDashboardPageProps) {
+    const studentId = "2024-84921";
+
+    return (
+        <>
+            <EnrollmentHeader
+                term={dummyCurrentTerm as TermResponse}
+                isSidebarOpen={isSidebarOpen}
+            />
+            <div>
+                <EnrollmentTable
+                    sections={dummyAllowedSections}
+                    studentId={studentId}
+                    onEnrollmentSuccess={() => {
+                        alert("Enrollment successful! (This is a demo)");
+                    }}
+                    isSidebarOpen={isSidebarOpen}
+                />
+            </div>
+        </>
+    );
+}
+
+// Export the wrapper that gets injected with isSidebarOpen
 export default function StudentDashboardPage() {
     return (
         <DashboardLayout
@@ -128,9 +160,7 @@ export default function StudentDashboardPage() {
             universityLogo={cmuLogo}
             onLogout={() => console.log('Logout')}
         >
-            {/* Your dashboard content */}
-            <h1 className="text-2xl font-bold mb-6">Welcome back, Alex!</h1>
-            {/* More content */}
+            <StudentDashboardPageContent />
         </DashboardLayout>
     );
 }
