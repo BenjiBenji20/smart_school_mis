@@ -53,7 +53,7 @@ export function TopNavigation({
             "sticky top-0 z-40 w-full border-b border-border bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60",
             className
         )}>
-            <div className="flex h-16 items-center gap-4 px-4 md:px-2">
+            <div className="flex h-16 items-center gap-4 md:px-8">
                 {/* LEFT: Menu Button + Page Title - 30% width */}
                 <div className={cn(
                     "flex items-center gap-3 min-w-0",
