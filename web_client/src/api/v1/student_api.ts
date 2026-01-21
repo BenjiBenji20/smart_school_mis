@@ -5,20 +5,20 @@
 import type { TermResponse } from '@/types/academic_structure.types';
 import securedRequest from './authentication_api';
 import type {
-    EnrollmentResponse,
+    AllowedEnrollSectionResponse,
 } from '@/types/enrollments_and_gradings.types'
-import type { BaseUserResponse } from '@/types/authentication.types';
+import type { StudentResponse } from '@/types/authentication.types';
 
 export const studentApi = {
-    async getCurrentStudent(): Promise <BaseUserResponse> {
-        const response = await securedRequest.get<BaseUserResponse>(
+    async getCurrentStudent(): Promise <StudentResponse> {
+        const response = await securedRequest.get<StudentResponse>(
             `/student/get/current-student`
         );
         return response.data;
     },
 
-    async getMyEnrollment(): Promise <EnrollmentResponse[]> {
-        const response = await securedRequest.get<EnrollmentResponse[]>(
+    async getMyEnrollment(): Promise <AllowedEnrollSectionResponse[]> {
+        const response = await securedRequest.get<AllowedEnrollSectionResponse[]>(
             `/student/get/enrollments`
         );
         return response.data;
