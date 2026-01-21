@@ -67,27 +67,15 @@ class StudentService:
         )
     
     
-    async def get_my_current_enrollments(self, student_id: str) -> List[EnrollmentResponseSchema]:
-        response: List[EnrollmentResponseSchema] = []
-        enrollments: List[Enrollment] = await self.student_repo.get_my_current_enrollments(student_id)
-        for enrollment in enrollments:
-            student: Student = await self.student_repo.get_student_by_id(enrollment.student_id)
-            class_section: ClassSection = await self.class_section_repo.get_by_id(enrollment.class_section_id)
-            course_offering: CourseOffering = await self.course_offering_repo.get_by_id(class_section.course_offering_id)
-            term: Term = await self.term_repo.get_by_id(enrollment.term_id)
+    async def get_my_current_enrollments(self, student_id: str) -> List[AllowedEnrollSectionResponseSchema]:
+        enrollments: List[AllowedEnrollSectionResponseSchema] = await self.student_repo.get_student_current_enrolled_section(
+            student_id
+        )
         
-            response.append(
-                await self.enrollment_service.format_enrollment_response(
-                    status=enrollment.status,
-                    student=student,
-                    class_section=class_section,
-                    course_offering=course_offering,
-                    term=term,
-                    description="Get my enrollments."
-                )
-            )
+        if len(enrollments) < 1:
+            return []
             
-        return response
+        return enrollments
     
     
     async def get_my_current_term(self, student_id: str) -> TermResponseSchema:

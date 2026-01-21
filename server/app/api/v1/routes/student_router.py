@@ -13,7 +13,7 @@ from app.db.db_session import get_async_db
 from app.middleware.current_user import get_current_user
 from app.services.student_service import StudentService
 from app.models.users.student import Student
-from app.schemas.enrollments_and_gradings_schema import EnrollmentResponseSchema
+from app.schemas.enrollments_and_gradings_schema import AllowedEnrollSectionResponseSchema, EnrollmentResponseSchema
 from app.schemas.academic_structure_schema import TermResponseSchema
 from app.schemas.base_user_schema import BaseUserResponseSchema, StudentResponseSchema
 from app.models.users.base_user import BaseUser
@@ -33,10 +33,10 @@ async def get_current_student(
     return await service.get_current_student_user(current_user.id)
 
 
-@student_router.get("/get/enrollments", response_model=List[EnrollmentResponseSchema])
+@student_router.get("/get/enrollments", response_model=List[AllowedEnrollSectionResponseSchema])
 async def get_my_current_enrollments(
     db: AsyncSession = Depends(get_async_db),
-    current_user: Student = Depends(get_current_user),
+    current_user: BaseUser = Depends(get_current_user),
     allowed_roles = Depends(role_required([UserRole.STUDENT]))
 ):
     service = StudentService(db)
@@ -73,3 +73,6 @@ async def get_my_next_term(
     return await service.get_my_next_term(
         student_id=current_user.id
     )
+    
+
+# @student_router.delete("/del/remove-enrollment/{enrollment_id}", response_model=AllowedEnrollSectionResponseSchema)
