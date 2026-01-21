@@ -22,6 +22,7 @@ import { LogOut, ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { type SidebarProps } from '@/types/sidebar.types';
 import { Submenu } from '@/components/ui/SidebarSubmenu';
+import { useLocation } from 'react-router';
 
 export function SidebarLayout({
     sections,
@@ -31,6 +32,36 @@ export function SidebarLayout({
     collapsed = false,
     onCollapseChange,
 }: SidebarProps) {
+    const location = useLocation();
+    const currentPath = location.pathname;
+
+    // Function to check if a menu item is active
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const isMenuItemActive = (url: string, submenu?: Array<any>) => {
+        if (url === currentPath) return true;
+
+        // Check submenu items
+        if (submenu) {
+            return submenu.some(subItem => subItem.url === currentPath);
+        }
+
+        return false;
+    };
+
+    // Process sections to add dynamic isActive
+    const processedSections = sections.map(section => ({
+        ...section,
+        items: section.items.map(item => ({
+            ...item,
+            isActive: isMenuItemActive(item.url, item.submenu),
+            // Process submenu items too
+            submenu: item.submenu?.map(subItem => ({
+                ...subItem,
+                isActive: subItem.url === currentPath
+            }))
+        }))
+    }));
+
     const [isCollapsed, setIsCollapsed] = React.useState(collapsed);
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [openSubmenus, setOpenSubmenus] = React.useState<Record<string, boolean>>({});
@@ -165,7 +196,7 @@ export function SidebarLayout({
                 "flex-1",
                 isCollapsed ? "p-0" : "p-4"
             )}>
-                {sections.map((section, index) => (
+                {processedSections.map((section, index) => (
                     <React.Fragment key={section.title}>
                         <SidebarGroup>
                             {/* Section Title - Hidden when collapsed */}
@@ -183,7 +214,7 @@ export function SidebarLayout({
                         </SidebarGroup>
 
                         {/* Separator between sections (except last) */}
-                        {index < sections.length - 1 && !isCollapsed && (
+                        {index < processedSections.length - 1 && !isCollapsed && (
                             <SidebarSeparator className="my-4" />
                         )}
                     </React.Fragment>
