@@ -8,6 +8,8 @@ import StudentRegistrationPage from './pages/authentication/StudentRegistrationP
 import { RegistrationSuccessPage } from './pages/authentication/RegistrationSuccessPage'
 import UserAuthenticationPage from './pages/authentication/UserAuthenticationPage'
 import StudentDashboardPage from './pages/dashboard/student/StudentDashboardPage'
+import { ProtectedRoute } from './middlewares/ProtectedRoute'
+import StudentEnrollmentPage from './pages/dashboard/student/StudentEnrollementPage'
 
 function App() {
     return (
@@ -19,8 +21,16 @@ function App() {
                     <Route path="/register/student" element={<StudentRegistrationPage />} />
                     <Route path="/register/success" element={<RegistrationSuccessPage />} />
                     <Route path="/" element={<UserAuthenticationPage />} />
-                    <Route path="/test" element={<StudentDashboardPage />} />
-
+                    <Route path="/student/dashboard" element={
+                        <ProtectedRoute >
+                            <StudentDashboardPage />
+                        </ProtectedRoute>
+                    } />
+                    <Route path="/student/enrollment" element={
+                        <ProtectedRoute >
+                            <StudentEnrollmentPage />
+                        </ProtectedRoute>
+                    } />
                 </Route>
             </Routes>
             <Toaster />
