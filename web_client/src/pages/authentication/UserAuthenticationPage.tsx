@@ -24,21 +24,38 @@ export default function UserAuthenticationPage() {
             };
 
             const response = await authenticate(loginData);
-            
+            console.log(response)
+
+
+            // Determine route based on role
+            let fullRoute = "/dashboard";
+
+            if (response.role == 'Student') {
+                fullRoute = "/student/dashboard";
+            } else if (response.role == 'Administrator') {
+                fullRoute = "/administrator/dashboard";
+            } else if (response.role == 'Dean') {
+                fullRoute = "/dean/dashboard";
+            } else if (response.role == 'Registrar') {
+                fullRoute = "/registrar/dashboard";
+            } else if (response.role == 'Program Chair') {
+                fullRoute = "/program-chair/dashboard";
+            }
+
             toast.success("Login Successful!", {
                 description: "Welcome back to City of Malabon University",
             });
-            
+
             // Redirect to dashboard based on user role
-            navigate("/dashboard",{
+            navigate(fullRoute, {
                 state: { user: response }
             });
-            
+
         } catch (error: unknown) {
-            const errorMessage = error instanceof Error 
-                ? error.message 
+            const errorMessage = error instanceof Error
+                ? error.message
                 : "Invalid credentials. Please try again.";
-            
+
             toast.error("Login Failed", {
                 description: errorMessage,
             });
@@ -67,7 +84,7 @@ export default function UserAuthenticationPage() {
                     subtitle="Enter your credentials to access your account"
                     enableFaceRecognition={true} // Set to false to disable face recognition
                 />
-                
+
                 <div className="pt-6 border-t text-center space-y-3">
                     <p className="text-sm text-muted-foreground">
                         Don't have an account?{' '}
@@ -79,7 +96,7 @@ export default function UserAuthenticationPage() {
                             Employee
                         </a>
                     </p>
-                    
+
                     <p className="text-xs text-muted-foreground">
                         Having trouble logging in?{' '}
                         <a href="/support" className="text-secondary hover:underline">

@@ -2,134 +2,25 @@
  * Date Written: 1/16/2026 at 8:08 PM
  */
 
-import { sidebarIcons } from '../../../components/dashboard/icon_constants';
 import cmuLogo from '@/assets/cmu-logo.png'
-import type { BaseUserResponse } from '@/types/authentication.types';
+import type { StudentResponse } from '@/types/authentication.types';
 import { DashboardLayout } from '@/components/layout/DashboarLayout';
-import { EnrollmentHeader } from '@/components/StudentEnrollment/EnrollmentHeader';
+import { EnrollmentHeader } from '@/components/student/EnrollmentTab/EnrollmentHeader';
 import type { TermResponse } from '@/types/academic_structure.types';
-import { EnrollmentTable } from '@/components/StudentEnrollment/EnrollmentTable';
+import { EnrollmentTable } from '@/components/student/EnrollmentTab/EnrollmentTable';
 import { dummyAllowedSections, dummyCurrentTerm } from '@/dummy/dummy_enrollment_data';
+import { studentSidebarSections } from '@/components/dashboard/Sidebar/sidebar_sections';
+import { useEffect, useState } from 'react';
+import { Loader2 } from 'lucide-react';
+import { studentApi } from '@/api/v1/student_api';
 
-// Student menu sections
-const sections = [
-    {
-        title: "STUDENT MENU",
-        items: [
-            {
-                title: "Dashboard",
-                url: "/student/dashboard",
-                icon: sidebarIcons.Dashboard,
-                isActive: true,
-            },
-            {
-                title: "Academics",
-                url: "#",
-                icon: sidebarIcons.Academics,
-                submenu: [
-                    {
-                        title: "Enrollment",
-                        url: "/student/enrollment",
-                        badge: "3",
-                    },
-                    {
-                        title: "Courses",
-                        url: "/student/courses",
-                    },
-                    {
-                        title: "Grades",
-                        url: "/student/grades",
-                        isActive: true,
-                    },
-                    {
-                        title: "Schedule",
-                        url: "/student/schedule",
-                    },
-                ],
-            },
-            {
-                title: "Assignments",
-                url: "#",
-                icon: sidebarIcons.Submissions,
-                badge: "2",
-                submenu: [
-                    {
-                        title: "Pending",
-                        url: "/student/assignments/pending",
-                        badge: "2",
-                    },
-                    {
-                        title: "Submitted",
-                        url: "/student/assignments/submitted",
-                    },
-                    {
-                        title: "Graded",
-                        url: "/student/assignments/graded",
-                    },
-                ],
-            },
-            {
-                title: "AI Tools",
-                url: "#",
-                icon: sidebarIcons['AI Analytics'],
-                submenu: [
-                    {
-                        title: "AI Analytics",
-                        url: "/student/ai-analytics",
-                    },
-                    {
-                        title: "AI Assistant",
-                        url: "/student/ai-assistant",
-                    },
-                    {
-                        title: "Study Planner",
-                        url: "/student/study-planner",
-                    },
-                ],
-            },
-            {
-                title: "Records",
-                url: "/student/records",
-                icon: sidebarIcons.Records,
-            },
-            {
-                title: "Settings",
-                url: "/student/settings",
-                icon: sidebarIcons.Settings,
-            },
-            {
-                title: "Help Center",
-                url: "/student/help",
-                icon: sidebarIcons.Help,
-            },
-        ],
-    }
-];
-
-// Test only
-const user = {
-    id: '2024-84921',
-    created_at: new Date(),
-    first_name: 'Alex',
-    middle_name: 'M.',
-    last_name: 'Rivera',
-    suffix: null,
-    age: 21,
-    gender: 'Male',
-    complete_address: '123 University Ave',
-    email: 'alex.rivera@cityofmalabonuniversity.edu.ph',
-    cellphone_number: '09123456789',
-    role: 'Student',
-    is_active: true,
-} as BaseUserResponse;
 
 interface StudentDashboardPageProps {
-    isSidebarOpen?: boolean; // This will be injected by DashboardLayout
+    isSidebarOpen?: boolean;
+    studentId: string;
 }
 
-function StudentDashboardPageContent({ isSidebarOpen = true }: StudentDashboardPageProps) {
-    const studentId = "2024-84921";
-
+function StudentDashboardPageContent({ isSidebarOpen = true, studentId }: StudentDashboardPageProps) {
     return (
         <>
             <EnrollmentHeader
@@ -141,7 +32,7 @@ function StudentDashboardPageContent({ isSidebarOpen = true }: StudentDashboardP
                     sections={dummyAllowedSections}
                     studentId={studentId}
                     onEnrollmentSuccess={() => {
-                        alert("Enrollment successful! (This is a demo)");
+                        alert("Enrollment successful!)");
                     }}
                     isSidebarOpen={isSidebarOpen}
                 />
@@ -152,15 +43,57 @@ function StudentDashboardPageContent({ isSidebarOpen = true }: StudentDashboardP
 
 // Export the wrapper that gets injected with isSidebarOpen
 export default function StudentDashboardPage() {
+    const [user, setUser] = useState<StudentResponse>();
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    const fetchData = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const studentData = await studentApi.getCurrentStudent();
+            setUser(studentData)
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } catch (err: any) {
+            setError(err.response?.data?.message || "Failed to load student data");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchData();
+    }, []);
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center h-64">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <span className="ml-2">Loading available enrollment...</span>
+            </div>
+        );
+    }
+
     return (
-        <DashboardLayout
-            user={user}
-            sidebarSections={sections}
-            pageTitle="Student Dashboard / Overview"
-            universityLogo={cmuLogo}
-            onLogout={() => console.log('Logout')}
-        >
-            <StudentDashboardPageContent />
-        </DashboardLayout>
+        <>
+            <title>CMU | Dashboard</title>
+            {
+                error || !user ? (
+                    <div className="text-center py-8 text-red-500">
+                        Error: {error}
+                    </div>
+                ) : (
+                    <DashboardLayout
+                        user={user}
+                        sidebarSections={studentSidebarSections}
+                        pageTitle="Student Dashboard / Overview"
+                        universityLogo={cmuLogo}
+                        onLogout={() => console.log('Logout')}
+                    >
+                        <StudentDashboardPageContent studentId={user.id} />
+                    </DashboardLayout>
+                )
+            }
+        </>
     );
 }

@@ -6,13 +6,13 @@ import { SidebarProvider, useSidebar } from '@/components/ui/sidebar';
 import { SidebarLayout } from '@/components/dashboard/Sidebar/SidebarLayout';
 import { MobileSidebar } from '@/components/dashboard/Sidebar/MobileSidebar';
 import { TopNavigation } from '@/components/layout/TopNavigationLayout';
-import { type BaseUserResponse } from '@/types/authentication.types';
+import { type BaseUserResponse, type StudentResponse } from '@/types/authentication.types';
 import { type ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 import React from 'react';
 
 interface DashboardLayoutProps {
-    user: BaseUserResponse;
+    user: BaseUserResponse | StudentResponse;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     sidebarSections: any[];
     children: ReactNode;

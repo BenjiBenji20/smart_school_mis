@@ -2,8 +2,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { EnrollmentHeader } from "@/components/StudentEnrollment/EnrollmentHeader";
-import { EnrollmentTable } from "@/components/StudentEnrollment/EnrollmentTable";
+import { EnrollmentHeader } from "@/components/student/EnrollmentTab/EnrollmentHeader";
+import { EnrollmentTable } from "@/components/student/EnrollmentTab/EnrollmentTable";
 import { Loader2 } from "lucide-react";
 import type { AllowedEnrollSectionResponse } from "@/types/enrollments_and_gradings.types";
 import type { TermResponse } from "@/types/academic_structure.types";
