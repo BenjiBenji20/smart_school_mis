@@ -18,10 +18,7 @@ from app.repository.users.student_repository import StudentRepository
 from app.repository.academic_structures.course_offering_repository import CourseOfferingRepository
 
 from app.models.academic_structures.term import Term
-from app.models.academic_structures.class_section import ClassSection
 from app.models.users.student import Student
-from app.models.enrollment_and_gradings.enrollment import Enrollment
-from app.models.academic_structures.course_offering import CourseOffering
 
 
 class StudentService:
@@ -116,4 +113,30 @@ class StudentService:
             semester_period=next_term.semester_period,
             status=next_term.status,
         )
+
+    
+    async def remove_enrollment(
+        self,
+        student_id: str,
+        class_section_id: str 
+    ) -> List[AllowedEnrollSectionResponseSchema]:
+        print(class_section_id)
+        """
+            Remove enrolled section that doesn't yet approved
+        """
+        print(f"\n\nCLASS SECTION ID TO REMOVE: {class_section_id}\n\n")
+        print(f"\n\nSTUDENT ID TO REMOVE: {student_id}\n\n")
+        await self.student_repo.remove_enrollment(
+            student_id=student_id, class_section_id=class_section_id
+        )
         
+        # fetch current enrolled list 
+        enrollments: List[AllowedEnrollSectionResponseSchema] = await self.student_repo.get_student_current_enrolled_section(
+            student_id
+        )
+        
+        if len(enrollments) < 1:
+            return []
+            
+        return enrollments
+    

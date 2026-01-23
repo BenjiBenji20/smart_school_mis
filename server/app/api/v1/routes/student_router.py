@@ -75,4 +75,21 @@ async def get_my_next_term(
     )
     
 
-# @student_router.delete("/del/remove-enrollment/{enrollment_id}", response_model=AllowedEnrollSectionResponseSchema)
+@student_router.delete(
+    "/del/remove-enrollment/{class_section_id}", response_model=List[AllowedEnrollSectionResponseSchema]
+)
+async def remove_enrollment(
+    class_section_id: str,
+    db: AsyncSession = Depends(get_async_db),
+    current_user: BaseUser = Depends(get_current_user),
+    allowed_roles = Depends(role_required([UserRole.STUDENT]))
+):
+    """
+        Remove enrolled section that doesn't yet approved
+    """
+    service = StudentService(db)
+    return await service.remove_enrollment(
+        student_id=current_user.id,
+        class_section_id=class_section_id
+    )
+    

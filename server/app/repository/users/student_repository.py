@@ -3,7 +3,7 @@
 """
 
 from typing import List, Optional
-from sqlalchemy import and_, case, exists, func, select, label
+from sqlalchemy import and_, case, delete, exists, func, select, label
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.repository.base_repository import BaseRepository
@@ -282,3 +282,27 @@ class StudentRepository(BaseRepository[Student]):
         result = await self.db.execute(stmt)
         return result.scalar()
     
+    
+    async def remove_enrollment(self, student_id: str, class_section_id: str) -> bool:
+        """
+            Remove enrollment with all conditions in a single query
+        """
+        try:
+            delete_stmt = delete(Enrollment).where(
+                and_(
+                    Enrollment.class_section_id == class_section_id,
+                    Enrollment.student_id == student_id,
+                    Enrollment.status != EnrollmentStatus.APPROVED,
+                )
+            )
+            
+            result = await self.db.execute(delete_stmt)
+            await self.db.commit()
+            
+            print(f"Deleted {result.rowcount} rows")
+            return result.rowcount > 0
+        except Exception as e:
+            print(f"Error during deletion: {e}")
+            await self.db.rollback()
+            raise
+            
