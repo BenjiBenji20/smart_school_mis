@@ -150,12 +150,12 @@ class EnrollmentGradingService:
 
         """
         # validation: Student not already/currently enrolled to the section
-        enrolled_sections: List[ClassSection] = await self.student_repo.get_student_current_enrolled_section(
+        enrolled_sections: List[AllowedEnrollSectionResponseSchema] = await self.student_repo.get_student_current_enrolled_section(
             student_id
         )
         
         for section in enrolled_sections:
-            if section.id == class_section_id:
+            if section.class_section_id == class_section_id:
                 raise InvalidRequestException(
                     f"Enrollment failed due to student already enrolled to {section.section_code}."
                 )
