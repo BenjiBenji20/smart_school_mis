@@ -13,27 +13,32 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Loader2, AlertCircle, Search } from "lucide-react";
+import { AlertCircle, Search } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import type { AllowedEnrollSectionResponse } from "@/types/enrollments_and_gradings.types";
 import { enrollmentApi } from "@/api/v1/enrollments_and_gradings_api";
 import { cn } from "@/lib/utils";
+import { EnrollmentTableButton } from "./EnrollmentTableButton";
+import { studentApi } from "@/api/v1/student_api";
 
 interface EnrollmentTableProps {
     sections: AllowedEnrollSectionResponse[];
     studentId: string;
     onEnrollmentSuccess?: () => void;
     isSidebarOpen?: boolean;
+    isForEnrollment?: boolean;
+    tableTitle?: string;
 }
 
 export function EnrollmentTable({
     sections,
     studentId,
     onEnrollmentSuccess,
-    isSidebarOpen
+    isSidebarOpen,
+    isForEnrollment,
+    tableTitle
 }: EnrollmentTableProps) {
     const [enrollingId, setEnrollingId] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
@@ -78,6 +83,25 @@ export function EnrollmentTable({
         }
     };
 
+    const handleRemove = async (classSectionId: string) => {
+        setEnrollingId(classSectionId);
+        setError(null);
+        setSuccess(null);
+
+        try {
+            await studentApi.removeEnrollment(classSectionId);
+            setSuccess("Removed the course.");
+            if (onEnrollmentSuccess) {
+                onEnrollmentSuccess();
+            }
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } catch (err: any) {
+            setError(err.response?.data?.message || "Failed to remove enrollment. Please try again.");
+        } finally {
+            setEnrollingId(null);
+        }
+    };
+
     // Filter sections based on search query
     const filteredSections = useMemo(() => {
         if (!searchQuery.trim()) return sections;
@@ -112,7 +136,7 @@ export function EnrollmentTable({
             )}
 
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 py-4 px-8">
-                <h2 className="text-lg font-bold">Available Sections</h2>
+                <h2 className="text-lg font-bold">{tableTitle}</h2>
                 <div className="relative w-full sm:w-auto sm:min-w-[250px]">
                     <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
                     <Input
@@ -154,8 +178,8 @@ export function EnrollmentTable({
                                             </TableCell>
                                         </TableRow>
                                     ) : (
-                                        filteredSections.map((section) => (
-                                            <TableRow key={section.class_section_id} className="hover:bg-muted/50 border-b">
+                                        filteredSections.map((section, index) => (
+                                            <TableRow key={`${section.class_section_id}_${index}`} className="hover:bg-muted/50 border-b">
                                                 <TableCell className="py-2.5 px-3 text-xs font-medium">
                                                     {section.course_code || "N/A"}
                                                 </TableCell>
@@ -185,22 +209,13 @@ export function EnrollmentTable({
                                                 <TableCell className="py-2.5 px-3 text-xs">
                                                     {section.assigned_professor || "TBA"}
                                                 </TableCell>
-                                                <TableCell className="py-2.5 px-3 text-right">
-                                                    <Button
-                                                        size="sm"
-                                                        onClick={() => handleEnroll(section.class_section_id)}
-                                                        disabled={enrollingId === section.class_section_id}
-                                                        className="h-7 px-3 text-xs"
-                                                    >
-                                                        {enrollingId === section.class_section_id ? (
-                                                            <>
-                                                                <Loader2 className="mr-1 h-3 w-3 animate-spin" />
-                                                                Enrolling
-                                                            </>
-                                                        ) : (
-                                                            "Enroll"
-                                                        )}
-                                                    </Button>
+                                                <TableCell>
+                                                    <EnrollmentTableButton
+                                                        classSectionId={section.class_section_id}
+                                                        tableRowId={enrollingId}
+                                                        action={isForEnrollment ? handleEnroll : handleRemove}
+                                                        isForEnrollment={isForEnrollment}
+                                                    />
                                                 </TableCell>
                                             </TableRow>
                                         ))

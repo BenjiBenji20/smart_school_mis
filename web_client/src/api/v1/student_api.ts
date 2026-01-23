@@ -10,14 +10,14 @@ import type {
 import type { StudentResponse } from '@/types/authentication.types';
 
 export const studentApi = {
-    async getCurrentStudent(): Promise <StudentResponse> {
+    async getCurrentStudent(): Promise<StudentResponse> {
         const response = await securedRequest.get<StudentResponse>(
             `/student/get/current-student`
         );
         return response.data;
     },
 
-    async getMyEnrollment(): Promise <AllowedEnrollSectionResponse[]> {
+    async getMyEnrollment(): Promise<AllowedEnrollSectionResponse[]> {
         const response = await securedRequest.get<AllowedEnrollSectionResponse[]>(
             `/student/get/enrollments`
         );
@@ -28,7 +28,7 @@ export const studentApi = {
      * 
      *  Get the current enrolled term of student
      */
-    async getMyCurrentTerm(): Promise <TermResponse> {
+    async getMyCurrentTerm(): Promise<TermResponse> {
         const response = await securedRequest.get<TermResponse>(
             `/student/get/current-term`
         );
@@ -39,11 +39,22 @@ export const studentApi = {
      * 
      *  Get the next term of student that needed to be enrolled
      */
-    async getMyNextTerm(): Promise <TermResponse> {
+    async getMyNextTerm(): Promise<TermResponse> {
         const response = await securedRequest.get<TermResponse>(
             `/student/get/next-term`
         );
         return response.data;
-    }
+    },
+
+    /**
+     * 
+     *  Remove enrolled section that doesn't yet approved
+     */
+    async removeEnrollment(classSetionId: string): Promise<AllowedEnrollSectionResponse[]> {
+        const response = await securedRequest.delete<AllowedEnrollSectionResponse[]>(
+            `/student/del/remove-enrollment/${classSetionId}`
+        );
+        return response.data;
+    },
 }
 

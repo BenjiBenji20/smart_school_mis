@@ -22,7 +22,10 @@ export const studentSidebarSections = [
                     {
                         title: "Enrollment",
                         url: "/student/enrollment",
-                        badge: "3",
+                    },
+                    {
+                        title: "My Enrollment",
+                        url: "/student/my-enrollment",
                     }
                 ],
             },

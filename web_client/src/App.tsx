@@ -9,7 +9,8 @@ import { RegistrationSuccessPage } from './pages/authentication/RegistrationSucc
 import UserAuthenticationPage from './pages/authentication/UserAuthenticationPage'
 import StudentDashboardPage from './pages/dashboard/student/StudentDashboardPage'
 import { ProtectedRoute } from './middlewares/ProtectedRoute'
-import StudentEnrollmentPage from './pages/dashboard/student/StudentEnrollementPage'
+import StudentEnrollmentTab from './pages/dashboard/student/StudentEnrollementTab'
+import StudentCurrentEnrollmentTab from './pages/dashboard/student/StudentCurrentEnrollementTab'
 
 function App() {
     return (
@@ -28,7 +29,12 @@ function App() {
                     } />
                     <Route path="/student/enrollment" element={
                         <ProtectedRoute >
-                            <StudentEnrollmentPage />
+                            <StudentEnrollmentTab />
+                        </ProtectedRoute>
+                    } />
+                    <Route path="/student/my-enrollment" element={
+                        <ProtectedRoute >
+                            <StudentCurrentEnrollmentTab />
                         </ProtectedRoute>
                     } />
                 </Route>

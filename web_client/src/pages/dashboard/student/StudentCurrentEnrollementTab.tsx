@@ -8,7 +8,6 @@ import { useState, useEffect } from "react";
 import { EnrollmentHeader } from "../../../components/student/EnrollmentTab/EnrollmentHeader";
 import { EnrollmentTable } from "../../../components/student/EnrollmentTab/EnrollmentTable";
 import { Loader2 } from "lucide-react";
-import { enrollmentApi } from "@/api/v1/enrollments_and_gradings_api";
 import type { AllowedEnrollSectionResponse } from "@/types/enrollments_and_gradings.types";
 import { DashboardLayout } from "@/components/layout/DashboarLayout";
 import cmuLogo from '@/assets/cmu-logo.png'
@@ -17,14 +16,14 @@ import type { TermResponse } from "@/types/academic_structure.types";
 import { studentApi } from "@/api/v1/student_api";
 import type { StudentResponse } from "@/types/authentication.types";
 
-interface StudentEnrollPageContentProps {
+interface StudentCurrentEnrollTabContentProps {
     isSidebarOpen?: boolean;
     studentId: string;
 }
 
-function StudentEnrollmentPageContent({ isSidebarOpen, studentId }: StudentEnrollPageContentProps) {
-    const [allowedSections, setAllowedSections] = useState<AllowedEnrollSectionResponse[]>([]);
-    const [nextTerm, setNextTerm] = useState<TermResponse>();
+function StudentCurrentEnrollmentTabContent({ isSidebarOpen, studentId }: StudentCurrentEnrollTabContentProps) {
+    const [currentEnrolledSections, setCurrentEnrolledSections] = useState<AllowedEnrollSectionResponse[]>([]);
+    const [currentTerm, setCurrentTerm] = useState<TermResponse>();
 
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -33,11 +32,11 @@ function StudentEnrollmentPageContent({ isSidebarOpen, studentId }: StudentEnrol
         setLoading(true);
         setError(null);
         try {
-            const allowedSectionsData = await enrollmentApi.getAllowedSections();
-            setAllowedSections(allowedSectionsData);
+            const currentEnrolledSectionsData = await studentApi.getMyEnrollment();
+            setCurrentEnrolledSections(currentEnrolledSectionsData);
 
-            const nextTermData = await studentApi.getMyNextTerm();
-            setNextTerm(nextTermData)
+            const currentTermData = await studentApi.getMyNextTerm();
+            setCurrentTerm(currentTermData)
 
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (err: any) {
@@ -69,23 +68,25 @@ function StudentEnrollmentPageContent({ isSidebarOpen, studentId }: StudentEnrol
         <>
 
             {
-                error || !nextTerm ? (
+                error || !currentTerm ? (
                     <div className="text-center py-8 text-red-500">
                         Error: {error}
                     </div>
                 ) : (
                     <div className="space-y-6">
                         <EnrollmentHeader
-                            term={nextTerm}
+                            term={currentTerm}
                             isSidebarOpen={isSidebarOpen}
                         />
 
                         <div>
                             <EnrollmentTable
-                                sections={allowedSections}
+                                sections={currentEnrolledSections}
                                 studentId={studentId}
                                 onEnrollmentSuccess={handleEnrollmentSuccess}
                                 isSidebarOpen={isSidebarOpen}
+                                isForEnrollment={false}
+                                tableTitle="Enroll Sections"
                             />
                         </div>
                     </div>
@@ -97,7 +98,7 @@ function StudentEnrollmentPageContent({ isSidebarOpen, studentId }: StudentEnrol
 
 
 // Export the wrapper that gets injected with isSidebarOpen
-export default function StudentEnrollmentPage() {
+export default function StudentCurrentEnrollmentTab() {
     const [user, setUser] = useState<StudentResponse>();
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -141,11 +142,11 @@ export default function StudentEnrollmentPage() {
                     <DashboardLayout
                         user={user}
                         sidebarSections={studentSidebarSections}
-                        pageTitle="Student / Enrollment"
+                        pageTitle="Student / My Enrollment"
                         universityLogo={cmuLogo}
                         onLogout={() => console.log('Logout')}
                     >
-                        <StudentEnrollmentPageContent studentId={user.id} />
+                        <StudentCurrentEnrollmentTabContent studentId={user.id} />
                     </DashboardLayout>
                 )
             }
