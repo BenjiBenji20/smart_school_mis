@@ -5,8 +5,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { EnrollmentHeader } from "../../../components/student/EnrollmentTab/EnrollmentHeader";
-import { EnrollmentTable } from "../../../components/student/EnrollmentTab/EnrollmentTable";
+import { EnrollmentHeader } from "../../../components/enrollment/EnrollmentTab/EnrollmentHeader";
+import { EnrollmentTable } from "../../../components/enrollment/EnrollmentTab/EnrollmentTable";
 import { Loader2 } from "lucide-react";
 import { enrollmentApi } from "@/api/v1/enrollments_and_gradings_api";
 import type { AllowedEnrollSectionResponse } from "@/types/enrollments_and_gradings.types";

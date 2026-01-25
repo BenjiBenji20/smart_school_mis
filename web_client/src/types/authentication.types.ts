@@ -2,6 +2,7 @@
  * Date Written: 1/15/2026 at 9:29 AM
  */
 
+import type { DeanStatus, ProgramChairStatus } from "./academic_structure.enums.types";
 import { UserGender, type UserRole, type UserStatus } from "./user_state.enums.types";
 
 // Base Response 
@@ -61,6 +62,19 @@ export interface StudentResponse extends BaseUserResponse {
     last_school_attended: string | null;
     program_enrolled_date: Date | null;
     year_level: number;
+}
+
+// Dean Response
+export interface DeanResponse extends BaseUserResponse {
+    department_id: string;
+    dean_status: DeanStatus;
+}
+
+
+// ProgramChair Response
+export interface ProgramChairResponse extends BaseUserResponse {
+    program_id: string;
+    program_chair_status: ProgramChairStatus;
 }
 
 // Validation Class

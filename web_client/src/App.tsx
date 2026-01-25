@@ -11,6 +11,7 @@ import StudentDashboardPage from './pages/dashboard/student/StudentDashboardPage
 import { ProtectedRoute } from './middlewares/ProtectedRoute'
 import StudentEnrollmentTab from './pages/dashboard/student/StudentEnrollementTab'
 import StudentCurrentEnrollmentTab from './pages/dashboard/student/StudentCurrentEnrollementTab'
+import DeanEnrollmentApprovalTab from './pages/dashboard/dean/EnrollmentApprovalTab'
 
 function App() {
     return (
@@ -35,6 +36,19 @@ function App() {
                     <Route path="/student/my-enrollment" element={
                         <ProtectedRoute >
                             <StudentCurrentEnrollmentTab />
+                        </ProtectedRoute>
+                    } />
+
+
+                    <Route path="/dean/dashboard" element={
+                        <ProtectedRoute >
+                            <DeanEnrollmentApprovalTab />
+                        </ProtectedRoute>
+                    } />
+
+                    <Route path="/dean/approve-enrollment" element={
+                        <ProtectedRoute >
+                            <DeanEnrollmentApprovalTab />
                         </ProtectedRoute>
                     } />
                 </Route>

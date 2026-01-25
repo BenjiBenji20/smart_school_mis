@@ -87,3 +87,29 @@ export const studentSidebarSections = [
         ],
     }
 ];
+
+
+// Dean menu sections
+export const deanSidebarSections = [
+    {
+        title: "DEAN MENU",
+        items: [
+            {
+                title: "Dashboard",
+                url: "/dean/dashboard",
+                icon: sidebarIcons.Dashboard,
+            },
+            {
+                title: "Academics",
+                url: "#",
+                icon: sidebarIcons.Academics,
+                submenu: [
+                    {
+                        title: "Enrollment Approval",
+                        url: "/dean/approve-enrollment",
+                    }
+                ],
+            },
+        ],
+    }
+];

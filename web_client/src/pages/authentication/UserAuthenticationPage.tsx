@@ -24,8 +24,6 @@ export default function UserAuthenticationPage() {
             };
 
             const response = await authenticate(loginData);
-            console.log(response)
-
 
             // Determine route based on role
             let fullRoute = "/dashboard";

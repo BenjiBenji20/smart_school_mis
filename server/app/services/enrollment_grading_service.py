@@ -228,6 +228,34 @@ class EnrollmentGradingService:
             )
         
         return response
+    
+    
+    async def get_term_based_program(
+        self, term_id: str, program_id: str, requested_by: str = None
+    ) -> SemesterTermResponseSchema:
+        """
+            Read term based on program
+        """
+        term: Term = await self.term_repo.get_term_based_program(term_id=term_id, program_id=program_id)
+        if term is None:
+            raise ResourceNotFoundException("No term found.")
+        
+        return SemesterTermResponseSchema(
+            id=term.id,
+            created_at=term.created_at,
+            academic_year_start=term.academic_year_start,
+            academic_year_end=term.academic_year_end,
+            enrollment_start=term.enrollment_start,
+            enrollment_end=term.enrollment_end,
+            semester_period=term.semester_period, 
+            status=term.status,
+            request_log=GenericResponse(
+                success=True,
+                requested_at=datetime.now(timezone.utc),
+                requested_by=requested_by,
+                description="Get term based on program"
+            )
+        )
            
         
     async def get_filtered_enrollments(

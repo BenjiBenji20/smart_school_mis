@@ -11,6 +11,9 @@ from app.repository.base_repository import BaseRepository
 from app.models.academic_structures.term import Term
 from app.models.enums.academic_structure_state import SemesterPeriod, TermStatus
 from app.models.enrollment_and_gradings.enrollment import Enrollment
+from app.models.academic_structures.course_offering import CourseOffering
+from app.models.academic_structures.curriculum import Curriculum
+from app.models.academic_structures.curriculum_course import CurriculumCourse
 
 
 class TermRepository(BaseRepository[Term]):
@@ -26,7 +29,6 @@ class TermRepository(BaseRepository[Term]):
         """
         query = select(Term).where(
             and_(
-                Term.academic_year_start == current_year,
                 Term.academic_year_end >= current_year,
                 Term.status == TermStatus.OPEN
             )
@@ -138,3 +140,25 @@ class TermRepository(BaseRepository[Term]):
 
         result = await self.db.execute(stmt)
         return result.scalars().first()
+
+
+    async def get_term_based_program(self, term_id: str, program_id: str) -> Term:
+        """
+            Read term based on program
+        """
+        stmt = (
+            select(Term)
+            .join(CourseOffering, CourseOffering.term_id == Term.id)
+            .join(CurriculumCourse, CurriculumCourse.id == CourseOffering.curriculum_course_id)
+            .join(Curriculum, Curriculum.id == CurriculumCourse.curriculum_id)
+            .where(
+                and_(
+                    Term.id == term_id,
+                    Curriculum.program_id == program_id
+                )
+            )
+        )
+        
+        result = await self.db.execute(stmt)
+        return result.scalar_one_or_none()
+        

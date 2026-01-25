@@ -74,7 +74,7 @@ export const enrollmentApi = {
         data: UpdateEnrollmentStatus
     ): Promise<EnrollmentResponse[]> {
         const response = await securedRequest.patch<EnrollmentResponse[]>(
-            `/enrollment/status`,
+            `/enrollment/update/status`,
             data
         );
         return response.data;

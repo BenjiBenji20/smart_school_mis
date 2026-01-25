@@ -8,9 +8,7 @@ from pydantic import BaseModel, Field, field_validator
 
 from app.schemas.generic_schema import GenericResponse
 from app.models.enums.academic_structure_state import *
-from app.schemas.user_schema import StudentResponseSchema
 from app.models.enums.enrollment_and_grading_state import EnrollmentStatus
-from app.schemas.academic_structure_schema import ClassSectionResponseSchema, TermResponseSchema
 
 class UpdateEnrollmentStatusSchema(BaseModel):
     status: EnrollmentStatus
@@ -42,6 +40,22 @@ class EnrollmentResponseSchema(BaseModel):
     
     class Config:
         from_attributes = True
+        
+        
+class SemesterTermResponseSchema(BaseModel):
+    """For term based on semester period"""
+    id: str
+    created_at: datetime
+    academic_year_start: int = Field(gt=1999, lt=3001)  # e.g. 2025
+    academic_year_end: int = Field(gt=1999, lt=3001) # e.g. 2026
+    enrollment_start: datetime
+    enrollment_end: datetime
+    semester_period: SemesterPeriod # FIRST | SECOND | SUMMER
+    status: TermStatus # DRAFT | OPEN | CLOSED | ARCHIVED
+    request_log: Optional[GenericResponse] = None
+    
+    class Config:
+        from_attributes= True
         
 
 class AllowedEnrollSectionResponseSchema(BaseModel):

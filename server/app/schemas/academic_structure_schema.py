@@ -259,7 +259,7 @@ class ProfessorClassSectionFormattedResponseSchema(BaseModel):
     created_at: datetime
     professor_details: BaseUserResponseSchema
     professor_status: ProfessorStatus
-    university_code: str
+    university_code: str | None = None
     course_offering_details: CourseOfferingResponseSchema
     class_section_details: ClassSectionResponseSchema
     

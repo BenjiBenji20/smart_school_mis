@@ -77,9 +77,9 @@ class CredentialValidatorSchema(BaseModel):
     
     
 class StudentResponseSchema(BaseUserResponseSchema):
-    university_code: str
+    university_code: str | None = None
     status: UserStatus
-    last_school_attended: str| None = None
+    last_school_attended: str | None = None
     program_enrolled_date: date| None = None
     year_level: int
     

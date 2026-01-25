@@ -166,7 +166,7 @@ async def register_curriculum(
     curriculum: CurriculumRequestSchema,
     db: AsyncSession = Depends(get_async_db),
     current_user: Registrar = Depends(get_current_user),
-    allowed_roles = Depends(role_required([UserRole.REGISTRAR]))
+    allowed_roles = Depends(role_required([UserRole.REGISTRAR, UserRole.DEAN, UserRole.PROGRAM_CHAIR]))
 ):
     """
         Register curriculum one at a time (Registrar only)
@@ -232,7 +232,7 @@ async def register_course(
 @academic_structure_router.get("/list-courses", response_model=List[CourseResponseSchema])    
 async def list_courses(
     db: AsyncSession = Depends(get_async_db),
-    allowed_roles = Depends(role_required([UserRole.REGISTRAR, UserRole.DEAN]))
+    allowed_roles = Depends(role_required([UserRole.REGISTRAR, UserRole.DEAN, UserRole.PROGRAM_CHAIR]))
 ):
     service = AcademicStructureService(db)
     return await service.list_courses()
@@ -331,7 +331,7 @@ async def get_active_year_term(
     )
     
 
-@academic_structure_router.get("/term/active-enrollment", response_model=List[TermResponseSchema])
+@academic_structure_router.get("/term/active-enrollment-term", response_model=List[TermResponseSchema])
 async def get_active_enrollment(
     db: AsyncSession = Depends(get_async_db),
     current_user: Registrar = Depends(get_current_user),

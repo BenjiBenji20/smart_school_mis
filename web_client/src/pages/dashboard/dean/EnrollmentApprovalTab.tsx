@@ -1,28 +1,29 @@
 /**
- * Date Written: 1/19/2026 at 9:08 AM
+ * Date Written: 1/23/2026 at 4:47 PM
  */
 
 "use client";
 
 import { useState, useEffect } from "react";
 import { EnrollmentHeader } from "../../../components/enrollment/EnrollmentTab/EnrollmentHeader";
-import { EnrollmentTable } from "../../../components/enrollment/EnrollmentTab/EnrollmentTable";
 import { Loader2 } from "lucide-react";
-import type { AllowedEnrollSectionResponse } from "@/types/enrollments_and_gradings.types";
+import type { EnrollmentResponse } from "@/types/enrollments_and_gradings.types";
 import { DashboardLayout } from "@/components/layout/DashboarLayout";
 import cmuLogo from '@/assets/cmu-logo.png'
-import { studentSidebarSections } from '@/components/dashboard/Sidebar/sidebar_sections';
+import { deanSidebarSections } from '@/components/dashboard/Sidebar/sidebar_sections';
 import type { TermResponse } from "@/types/academic_structure.types";
 import { studentApi } from "@/api/v1/student_api";
-import type { StudentResponse } from "@/types/authentication.types";
+import type { DeanResponse } from "@/types/authentication.types";
+import { enrollmentApi } from "@/api/v1/enrollments_and_gradings_api";
+import { EnrollmentApprovalTable } from "@/components/enrollment/EnrollmentTab/EnrollmentApprovalTable";
+import { deanApi } from "@/api/v1/dean_api";
 
-interface StudentCurrentEnrollTabContentProps {
+interface DeanEnrollmentApprovalTabContentProps {
     isSidebarOpen?: boolean;
-    studentId: string;
 }
 
-function StudentCurrentEnrollmentTabContent({ isSidebarOpen, studentId }: StudentCurrentEnrollTabContentProps) {
-    const [currentEnrolledSections, setCurrentEnrolledSections] = useState<AllowedEnrollSectionResponse[]>([]);
+function DeanEnrollmentApprovalTabContent({ isSidebarOpen }: DeanEnrollmentApprovalTabContentProps) {
+    const [enrollmentData, setEnrollmentData] = useState<EnrollmentResponse[]>([]);
     const [currentTerm, setCurrentTerm] = useState<TermResponse>();
 
     const [loading, setLoading] = useState(true);
@@ -32,8 +33,8 @@ function StudentCurrentEnrollmentTabContent({ isSidebarOpen, studentId }: Studen
         setLoading(true);
         setError(null);
         try {
-            const currentEnrolledSectionsData = await studentApi.getMyEnrollment();
-            setCurrentEnrolledSections(currentEnrolledSectionsData);
+            const enrollmentDataData = await enrollmentApi.getAllEnrollments();
+            setEnrollmentData(enrollmentDataData);
 
             const currentTermData = await studentApi.getMyNextTerm();
             setCurrentTerm(currentTermData)
@@ -80,13 +81,11 @@ function StudentCurrentEnrollmentTabContent({ isSidebarOpen, studentId }: Studen
                         />
 
                         <div>
-                            <EnrollmentTable
-                                sections={currentEnrolledSections}
-                                studentId={studentId}
-                                onEnrollmentSuccess={handleEnrollmentSuccess}
+                            <EnrollmentApprovalTable
+                                enrollmentData={enrollmentData}
                                 isSidebarOpen={isSidebarOpen}
-                                isForEnrollment={false}
-                                tableTitle="Enroll Sections"
+                                onEnrollmentSuccess={handleEnrollmentSuccess}
+                                tableTitle="Enrollment Queue"
                             />
                         </div>
                     </div>
@@ -98,8 +97,8 @@ function StudentCurrentEnrollmentTabContent({ isSidebarOpen, studentId }: Studen
 
 
 // Export the wrapper that gets injected with isSidebarOpen
-export default function StudentCurrentEnrollmentTab() {
-    const [user, setUser] = useState<StudentResponse>();
+export default function DeanEnrollmentApprovalTab() {
+    const [user, setUser] = useState<DeanResponse>();
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -107,8 +106,8 @@ export default function StudentCurrentEnrollmentTab() {
         setLoading(true);
         setError(null);
         try {
-            const studentData = await studentApi.getCurrentStudent();
-            setUser(studentData)
+            const deanData = await deanApi.getCurrentDean();
+            setUser(deanData)
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (err: any) {
             setError(err.response?.data?.message || "Failed to load student data");
@@ -141,12 +140,12 @@ export default function StudentCurrentEnrollmentTab() {
                 ) : (
                     <DashboardLayout
                         user={user}
-                        sidebarSections={studentSidebarSections}
-                        pageTitle="Student / My Enrollment"
+                        sidebarSections={deanSidebarSections}
+                        pageTitle="Dean / Enrollment Approval"
                         universityLogo={cmuLogo}
                         onLogout={() => console.log('Logout')}
                     >
-                        <StudentCurrentEnrollmentTabContent studentId={user.id} />
+                        <DeanEnrollmentApprovalTabContent />
                     </DashboardLayout>
                 )
             }

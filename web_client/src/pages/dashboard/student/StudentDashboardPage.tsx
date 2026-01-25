@@ -5,9 +5,9 @@
 import cmuLogo from '@/assets/cmu-logo.png'
 import type { StudentResponse } from '@/types/authentication.types';
 import { DashboardLayout } from '@/components/layout/DashboarLayout';
-import { EnrollmentHeader } from '@/components/student/EnrollmentTab/EnrollmentHeader';
+import { EnrollmentHeader } from '@/components/enrollment/EnrollmentTab/EnrollmentHeader';
 import type { TermResponse } from '@/types/academic_structure.types';
-import { EnrollmentTable } from '@/components/student/EnrollmentTab/EnrollmentTable';
+import { EnrollmentTable } from '@/components/enrollment/EnrollmentTab/EnrollmentTable';
 import { dummyAllowedSections, dummyCurrentTerm } from '@/dummy/dummy_enrollment_data';
 import { studentSidebarSections } from '@/components/dashboard/Sidebar/sidebar_sections';
 import { useEffect, useState } from 'react';

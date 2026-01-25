@@ -16,6 +16,7 @@ from app.db.db_session import get_async_db
 from app.middleware.current_user import get_current_user
 from app.services.enrollment_grading_service import EnrollmentGradingService
 from app.models.users.student import Student
+from app.models.users.base_user import BaseUser
 
 enrollment_grading_router = APIRouter(
     prefix="/api/enrollment",
@@ -85,13 +86,32 @@ async def get_all_enrollments(
     """
     service = EnrollmentGradingService(db)
     return await service.get_all_enrollments()
+
+
+@enrollment_grading_router.get("/get-term/{term_id}/program/{program_id}", response_model=SemesterTermResponseSchema)
+async def get_term_based_program(
+    term_id: str,
+    program_id: str,
+    current_user: BaseUser = Depends(get_current_user),
+    db: AsyncSession = Depends(get_async_db),
+    allowed_roles = Depends(role_required([UserRole.REGISTRAR, UserRole.DEAN, UserRole.PROGRAM_CHAIR]))
+):
+    """
+        Read term based on program
+    """
+    service = EnrollmentGradingService(db)
+    return await service.get_term_based_program(
+        term_id=term_id,
+        program_id=program_id,
+        requested_by=current_user.first_name + " " + current_user.last_name
+    )
     
     
 @enrollment_grading_router.get(
     "/filter", 
     response_model=List[EnrollmentResponseSchema]
 )
-async def get_all_enrollments(
+async def get_filter_enrollments(
     department_id: str = None,
     program_id: str = None,
     class_section_id: str = None,
