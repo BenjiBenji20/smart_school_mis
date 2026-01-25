@@ -4,7 +4,7 @@
 
 from datetime import datetime, timezone
 import uuid
-from sqlalchemy import Column, DateTime, ForeignKey, SmallInteger, String
+from sqlalchemy import Column, DateTime, ForeignKey, SmallInteger, String, UniqueConstraint
 from sqlalchemy.orm import relationship
 
 from app.db.base import Base
@@ -16,7 +16,7 @@ class Room(Base):
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False) 
     
-    room_code = Column(String(10), unique=True, nullable=True)
+    room_code = Column(String(10), unique=False, nullable=True)
 
     # foreign keys
     building_id = Column(ForeignKey("building.id"), nullable=False)
@@ -35,5 +35,13 @@ class Room(Base):
         back_populates = "room",
         cascade="all, delete-orphan",
         lazy="dynamic"
+    )
+    
+    __table_args__ = (
+        UniqueConstraint(
+            "room_code",
+            "building_id",
+            name="uq_rooM-room_code_building_id"
+        ),
     )
             
