@@ -2,7 +2,7 @@
     Date Written: 12/28/2025 at 9:05 AM
 """
 
-from typing import List
+from typing import Any, List
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from datetime import datetime, timezone
@@ -76,51 +76,31 @@ class EnrollmentGradingService:
      
     async def format_enrollment_response(
         self,
-        status: EnrollmentStatus,
-        student: Student, 
-        class_section: ClassSection,
-        course_offering: CourseOffering,
-        term: Term,
+        enrollment: EnrollmentResponseSchema,
         requested_by: str = "",
         description: str = "",
-        
     ) -> EnrollmentResponseSchema:
         return EnrollmentResponseSchema(
-            status=status,
-            student=StudentResponseSchema(
-                id=str(student.id),
-                created_at=student.created_at,
-                first_name=student.first_name,
-                middle_name=student.middle_name,
-                last_name=student.last_name,
-                suffix=student.suffix, 
-                age=student.age,
-                gender=student.gender,
-                complete_address=student.complete_address,
-                email=student.email,
-                cellphone_number=student.cellphone_number,
-                role=student.role, 
-                is_active=student.is_active,
-                university_code=student.university_code,
-                status=student.status,
-                last_school_attended=student.last_school_attended,
-                program_enrolled_date=student.program_enrolled_date,
-                year_level=student.year_level
-            ),
-            class_section_details=await self.academic_structure_service.format_class_section_response(
-                class_section=class_section,
-                course_offering=course_offering
-            ),
-            term=TermResponseSchema(
-                id=str(term.id),
-                created_at=term.created_at,
-                academic_year_start=term.academic_year_start, 
-                academic_year_end=term.academic_year_end,
-                enrollment_start=term.enrollment_start,
-                enrollment_end=term.enrollment_end,
-                semester_period=term.semester_period,
-                status=term.status
-            ),
+            enrollment_id=enrollment.enrollment_id,
+            student_id=enrollment.student_id,
+            class_section_id=enrollment.class_section_id,
+            term_id=enrollment.term_id,
+            program_id=enrollment.program_id,
+            enrollment_status=enrollment.enrollment_status,
+            section_code=enrollment.section_code,
+            course_code=enrollment.course_code,
+            title=enrollment.title,
+            units=enrollment.units,
+            day_of_week=enrollment.day_of_week,
+            start_time=enrollment.start_time,
+            end_time=enrollment.end_time,
+            room_code=enrollment.room_code,
+            semester_period=enrollment.semester_period,
+            academic_year_start=enrollment.academic_year_start,
+            academic_year_end=enrollment.academic_year_end,
+            program_code=enrollment.program_code,
+            student_name=enrollment.student_name,
+            assigned_professor=enrollment.assigned_professor,
             request_log=GenericResponse(
                 success=True,
                 requested_at=datetime.now(timezone.utc),
@@ -236,22 +216,13 @@ class EnrollmentGradingService:
         """
             Read all student enrollment (Registrar role only)
         """
-        enrollments: List[Enrollment] = await self.enrollment_repo.get_all()
+        enrollments: List[Any] = await self.enrollment_repo.get_all_enrollments()
         response: List[EnrollmentResponseSchema] = []
         
         for enrollment in enrollments:
-            student: Student = await self.student_repo.get_student_by_id(enrollment.student_id)
-            class_section: ClassSection = await self.class_section_repo.get_by_id(enrollment.class_section_id)
-            course_offering: CourseOffering = await self.course_offering_repo.get_by_id(class_section.course_offering_id)
-            term: Term = await self.term_repo.get_by_id(enrollment.term_id)
-        
             response.append(
                 await self.format_enrollment_response(
-                    status=enrollment.status,
-                    student=student,
-                    class_section=class_section,
-                    course_offering=course_offering,
-                    term=term,
+                    enrollment=enrollment,
                     description="Read all student enrollments."
                 )
             )
@@ -270,24 +241,15 @@ class EnrollmentGradingService:
             Get filtered enrollment based on:
                 [status] not yet implemented, department, program and term
         """
-        enrollments: List[Enrollment] = await self.enrollment_repo.get_filtered_enrollments(
+        enrollments: List[Any] = await self.enrollment_repo.get_filtered_enrollments(
             department_id, program_id, class_section_id, term_id
         )
         response: List[EnrollmentResponseSchema] = []
         
         for enrollment in enrollments:
-            student: Student = await self.student_repo.get_student_by_id(enrollment.student_id)
-            class_section: ClassSection = await self.class_section_repo.get_by_id(enrollment.class_section_id)
-            course_offering: CourseOffering = await self.course_offering_repo.get_by_id(class_section.course_offering_id)
-            term: Term = await self.term_repo.get_by_id(enrollment.term_id)
-        
             response.append(
                 await self.format_enrollment_response(
-                    status=enrollment.status,
-                    student=student,
-                    class_section=class_section,
-                    course_offering=course_offering,
-                    term=term,
+                    enrollment=enrollment,
                     description="Filter enrollments."
                 )
             )
@@ -318,6 +280,7 @@ class EnrollmentGradingService:
         
             response.append(
                 await self.format_enrollment_response(
+                    enrollment_id=enrollment.id,
                     status=enrollment.status,
                     student=student,
                     class_section=class_section,

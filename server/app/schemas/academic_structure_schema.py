@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field, field_validator
 from app.schemas.generic_schema import GenericResponse
 from app.models.enums.academic_structure_state import *
 from app.models.enums.user_state import ProfessorStatus
-from app.schemas.base_user_schema import BaseUserResponseSchema, StudentResponseSchema
+from app.schemas.user_schema import BaseUserResponseSchema, StudentResponseSchema
 from app.models.enums.enrollment_and_grading_state import EnrollmentStatus
 
 # ==============================================

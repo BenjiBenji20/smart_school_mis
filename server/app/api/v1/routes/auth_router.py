@@ -13,7 +13,7 @@ from app.models.users.base_user import BaseUser
 from app.exceptions.customed_exception import *
 from app.db.db_session import get_async_db
 from app.services.auth_service import AuthService
-from app.schemas.base_user_schema import BaseUserRequestSchema, BaseUserResponseSchema
+from app.schemas.user_schema import BaseUserRequestSchema, BaseUserResponseSchema
 
 logger = logging.getLogger(__name__)
 

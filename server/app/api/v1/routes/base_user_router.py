@@ -16,7 +16,7 @@ from app.models.enums.user_state import UserRole
 from app.models.users.base_user import BaseUser
 from app.middleware.current_user import get_current_user
 from app.services.auth_service import AuthService
-from app.schemas.base_user_schema import CredentialValidatorSchema
+from app.schemas.user_schema import CredentialValidatorSchema
 from app.exceptions.customed_exception import InvalidRequestException
 from app.services.base_user_service import BaseUserService
 

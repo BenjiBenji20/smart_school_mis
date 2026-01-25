@@ -217,10 +217,10 @@ async def register_course(
     courses: List[CourseRequestSchema],
     db: AsyncSession = Depends(get_async_db),
     current_user: Registrar = Depends(get_current_user),
-    allowed_roles = Depends(role_required([UserRole.REGISTRAR]))
+    allowed_roles = Depends(role_required([UserRole.REGISTRAR, UserRole.DEAN]))
 ):
     """
-        Register one or multiple courses (Registrar only)
+        Register one or multiple courses (Registrar and Dean only)
     """
     service = AcademicStructureService(db)
     return await service.register_course(
@@ -243,7 +243,7 @@ async def register_curriculum_course(
     curriculum_courses: List[CurriculumCourseRequestSchema],
     db: AsyncSession = Depends(get_async_db),
     current_user: Registrar = Depends(get_current_user),
-    allowed_roles = Depends(role_required([UserRole.REGISTRAR]))
+    allowed_roles = Depends(role_required([UserRole.REGISTRAR, UserRole.DEAN]))
 ):
     """
         Register one or multiple curriculum courses (Registrar only)
@@ -264,7 +264,7 @@ async def list_curriculum_course_by_field(
     year_level: int = None,
     semester: int = None,
     db: AsyncSession = Depends(get_async_db),
-    allowed_roles = Depends(role_required([UserRole.REGISTRAR]))
+    allowed_roles = Depends(role_required([UserRole.REGISTRAR, UserRole.DEAN]))
 ):
     service = AcademicStructureService(db)
     return await service.list_curriculum_course_by_field(
@@ -335,7 +335,7 @@ async def get_active_year_term(
 async def get_active_enrollment(
     db: AsyncSession = Depends(get_async_db),
     current_user: Registrar = Depends(get_current_user),
-    allowed_roles = Depends(role_required([UserRole.REGISTRAR]))
+    allowed_roles = Depends(role_required([UserRole.REGISTRAR, UserRole.DEAN]))
 ):
     """
         Get active enrollments.
@@ -353,10 +353,10 @@ async def register_course_offering(
     course_offering: CourseOfferingRequestSchema,
     db: AsyncSession = Depends(get_async_db),
     current_user: Registrar = Depends(get_current_user),
-    allowed_roles = Depends(role_required([UserRole.REGISTRAR]))
+    allowed_roles = Depends(role_required([UserRole.REGISTRAR, UserRole.DEAN]))
 ):
     """
-         course_offering one at a time (Registrar only).
+        Register course_offering one at a time (Registrar only).
         Status is PENDING at registration. 
         Must be update by registrar or dean.
     """

@@ -11,8 +11,8 @@ from app.middleware.current_user import get_current_user
 from app.middleware.role_checker import role_required
 from app.models.enums.user_state import UserRole
 from app.models.users.base_user import BaseUser
-from app.schemas.generic_schema import GenericResponse
 from app.services.program_chair_service import ProgramChairService
+from app.schemas.user_schema import ProgramChairResponseSchema
 
 
 program_chair_router = APIRouter(
@@ -20,18 +20,13 @@ program_chair_router = APIRouter(
     tags=["program_chair APIs"]
 )
 
-
-@program_chair_router.patch("/assign/{program_chair_id}/program_chair/{program_id}/program", response_model=GenericResponse)
-async def assign_program(
-    program_chair_id: str,
-    program_id: str,
+@program_chair_router.get("/get/current-program-chair", response_model=ProgramChairResponseSchema)
+async def get_current_program_chair(
     db: AsyncSession = Depends(get_async_db),
     current_user: BaseUser = Depends(get_current_user),
-    allowed_roles = Depends(role_required([UserRole.REGISTRAR, UserRole.DEAN]))
+    allowed_roles = Depends(role_required([UserRole.PROGRAM_CHAIR]))
 ):
     service = ProgramChairService(db)
-    return await service.assign_program_chair_program(
-        program_chair_id=program_chair_id,
-        program_id=program_id,
-        requested_by=current_user.first_name + " " + current_user.last_name
+    return await service.get_current_program_chair_user(
+        program_chair_id=current_user.id
     )

@@ -4,7 +4,7 @@ from pydantic import BaseModel, Field, field_validator, EmailStr
 import regex
 
 from app.exceptions.customed_exception import UnprocessibleContentException
-from app.models.enums.user_state import ProfessorStatus, UserRole, UserGender, UserStatus
+from app.models.enums.user_state import DeanStatus, ProfessorStatus, ProgramChairStatus, UserRole, UserGender, UserStatus
 
 
 class BaseUserResponseSchema(BaseModel):
@@ -82,4 +82,14 @@ class StudentResponseSchema(BaseUserResponseSchema):
     last_school_attended: str| None = None
     program_enrolled_date: date| None = None
     year_level: int
+    
+
+class DeanResponseSchema(BaseUserResponseSchema):
+    department_id: str | None = None
+    dean_status: DeanStatus
+    
+    
+class ProgramChairResponseSchema(BaseUserResponseSchema):
+    program_id: str | None = None
+    program_chair_status: ProgramChairStatus
     

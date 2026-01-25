@@ -19,7 +19,7 @@ from app.exceptions.customed_exception import *
 from app.models.users.base_user import BaseUser
 from app.repository.auth_repository import AuthRepository
 from app.models.enums.user_state import UserStatus
-from app.schemas.base_user_schema import BaseUserRequestSchema, BaseUserResponseSchema
+from app.schemas.user_schema import BaseUserRequestSchema, BaseUserResponseSchema
 
 logger = logging.getLogger(__name__)
 

@@ -78,7 +78,7 @@ async def enroll_student_class_section(
 @enrollment_grading_router.get("/get-enrollments", response_model=List[EnrollmentResponseSchema])
 async def get_all_enrollments(
     db: AsyncSession = Depends(get_async_db),
-    allowed_roles = Depends(role_required([UserRole.REGISTRAR]))
+    allowed_roles = Depends(role_required([UserRole.REGISTRAR, UserRole.DEAN, UserRole.PROGRAM_CHAIR]))
 ):
     """
         Read all student enrollment (Registrar role only)
@@ -111,12 +111,12 @@ async def get_all_enrollments(
     )
 
 
-@enrollment_grading_router.patch("/status", response_model=List[EnrollmentResponseSchema])
+@enrollment_grading_router.patch("/update/status", response_model=List[EnrollmentResponseSchema])
 async def update_enrollment_status(
     enrollments: UpdateEnrollmentStatusSchema,
     db: AsyncSession = Depends(get_async_db),
     current_user: Registrar = Depends(get_current_user),
-    allowed_roles = Depends(role_required([UserRole.REGISTRAR]))
+    allowed_roles = Depends(role_required([UserRole.REGISTRAR, UserRole.DEAN, UserRole.PROGRAM_CHAIR]))
 ):
     """
         Update multiple enrollments (registrar role only)
@@ -133,7 +133,7 @@ async def update_enrollment_status(
 async def list_enrollment_by_status(
     enrollment_status: EnrollmentStatus,
     db: AsyncSession = Depends(get_async_db),
-    allowed_roles = Depends(role_required([UserRole.REGISTRAR]))
+    allowed_roles = Depends(role_required([UserRole.REGISTRAR, UserRole.DEAN, UserRole.PROGRAM_CHAIR]))
 ):
     service = EnrollmentGradingService(db)
     return await service.list_enrollment_by_status(
